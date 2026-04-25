@@ -256,6 +256,52 @@ if st.button("📄 Generate Professional Report"):
             )
 
 # -------------------------
+# 💬 AI FINANCIAL ADVISOR
+# -------------------------
+st.subheader("💬 AI Financial Advisor")
+
+user_query = st.text_input("Ask anything about your finances")
+
+def financial_chat(query):
+    query = query.lower()
+
+    if "afford" in query:
+        if monthly_savings <= 0:
+            return "❌ You should not buy this. You are overspending already."
+        elif monthly_savings > 20000:
+            return "✅ You can afford it comfortably."
+        elif monthly_savings > 10000:
+            return "⚠️ You can afford it, but be cautious."
+        else:
+            return "❌ Not recommended. Your savings are low."
+
+    elif "invest" in query:
+        if policy["risk_profile"] == "High Growth":
+            return "📈 Invest more in equity-based assets."
+        elif policy["risk_profile"] == "Balanced":
+            return "⚖️ Maintain a mix of equity and debt."
+        else:
+            return "🛡️ Focus on safe investments and savings first."
+
+    elif "spending" in query:
+        if monthly_expense > monthly_income * 0.7:
+            return "⚠️ Your spending is too high."
+        else:
+            return "✅ Your spending is under control."
+
+    elif "save" in query:
+        if savings_rate < 20:
+            return "💡 Try to increase savings to at least 20%."
+        else:
+            return "✅ Your savings habit is good."
+
+    else:
+        return "🤖 Ask about affordability, investing, savings, or spending."
+
+if st.button("Ask AI"):
+    response = financial_chat(user_query)
+    st.success(response)
+# -------------------------
 # FOOTER
 # -------------------------
 st.markdown("---")
