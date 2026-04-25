@@ -152,7 +152,7 @@ csv = chart_data.to_csv(index=False).encode("utf-8")
 st.download_button("Download CSV Report", csv, "financial_report.csv")
 
 # -------------------------
-#def generate_pdf(file_path):
+def generate_pdf(file_path):
     try:
         from reportlab.platypus import (
             SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, Image, PageBreak
@@ -163,9 +163,6 @@ st.download_button("Download CSV Report", csv, "financial_report.csv")
 
         doc = SimpleDocTemplate(file_path, pagesize=A4)
 
-        # -------------------------
-        # STYLES
-        # -------------------------
         title = ParagraphStyle(name="Title", fontSize=28, alignment=1, spaceAfter=30)
         subtitle = ParagraphStyle(name="Subtitle", fontSize=16, alignment=1, spaceAfter=20)
         heading = ParagraphStyle(name="Heading", fontSize=18, spaceAfter=12)
@@ -173,105 +170,33 @@ st.download_button("Download CSV Report", csv, "financial_report.csv")
 
         content = []
 
-        # -------------------------
         # COVER PAGE
-        # -------------------------
         content.append(Spacer(1, 200))
         content.append(Paragraph("AI FINANCE REPORT", title))
         content.append(Paragraph("Financial Optimization System", subtitle))
         content.append(Paragraph(datetime.now().strftime("%d %B %Y"), body))
         content.append(PageBreak())
 
-        # -------------------------
-        # EXECUTIVE SUMMARY
-        # -------------------------
+        # SUMMARY
         content.append(Paragraph("Executive Summary", heading))
+        content.append(Paragraph(f"Savings Rate: {int(savings_rate)}%", body))
 
-        content.append(Paragraph(
-            f"This report analyzes your financial health based on income, expenses, and savings behavior.",
-            body
-        ))
-
-        content.append(Paragraph(
-            f"Your current savings rate is <b>{int(savings_rate)}%</b>, "
-            f"indicating {'strong' if savings_rate > 20 else 'moderate' if savings_rate > 10 else 'low'} financial health.",
-            body
-        ))
-
-        # -------------------------
         # TABLE
-        # -------------------------
         table_data = [
             ["Metric", "Value"],
-            ["Monthly Income", f"₹{int(monthly_income):,}"],
-            ["Monthly Expense", f"₹{int(monthly_expense):,}"],
-            ["Monthly Savings", f"₹{int(monthly_savings):,}"]
+            ["Income", f"₹{int(monthly_income):,}"],
+            ["Expense", f"₹{int(monthly_expense):,}"],
+            ["Savings", f"₹{int(monthly_savings):,}"]
         ]
 
-        table = Table(table_data, colWidths=[200, 200])
+        table = Table(table_data)
         table.setStyle(TableStyle([
-            ("BACKGROUND", (0,0), (-1,0), colors.HexColor("#1e293b")),
+            ("BACKGROUND", (0,0), (-1,0), colors.black),
             ("TEXTCOLOR", (0,0), (-1,0), colors.white),
-            ("FONTNAME", (0,0), (-1,0), "Helvetica-Bold"),
-            ("GRID", (0,0), (-1,-1), 0.5, colors.grey),
-            ("BACKGROUND", (0,1), (-1,-1), colors.whitesmoke)
+            ("GRID", (0,0), (-1,-1), 0.5, colors.grey)
         ]))
 
         content.append(table)
-        content.append(Spacer(1, 20))
-
-        # -------------------------
-        # CHART
-        # -------------------------
-        fig, ax = plt.subplots()
-        ax.pie(chart_data["Amount"], labels=chart_data["Category"], autopct='%1.1f%%')
-        chart_path = "chart.png"
-        plt.savefig(chart_path)
-        plt.close()
-
-        content.append(Paragraph("Expense Distribution", heading))
-        content.append(Image(chart_path, width=400, height=300))
-
-        # -------------------------
-        # POLICY SECTION
-        # -------------------------
-        content.append(Spacer(1, 20))
-        content.append(Paragraph("Policy Insights", heading))
-
-        content.append(Paragraph(
-            f"Recommended Tax Regime: <b>{policy['better_regime']}</b>", body
-        ))
-
-        content.append(Paragraph(
-            f"Risk Profile: <b>{policy['risk_profile']}</b>", body
-        ))
-
-        content.append(Spacer(1, 10))
-
-        for k, v in policy["allocation"].items():
-            content.append(Paragraph(f"{k}: {v}", body))
-
-        # -------------------------
-        # RECOMMENDATIONS
-        # -------------------------
-        content.append(Spacer(1, 20))
-        content.append(Paragraph("Recommendations", heading))
-
-        if savings_rate < 20:
-            content.append(Paragraph(
-                "Increase savings by reducing discretionary expenses and improving budgeting.",
-                body
-            ))
-        else:
-            content.append(Paragraph(
-                "Maintain your current financial discipline and consider long-term investments.",
-                body
-            ))
-
-        content.append(Paragraph(
-            "Ensure you maintain an emergency fund of at least 6 months of expenses.",
-            body
-        ))
 
         doc.build(content)
 
