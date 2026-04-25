@@ -317,28 +317,43 @@ def smart_chat(q):
             f"👉 {'Increase savings urgently' if savings_rate < 20 else 'You are doing well'}"
         )
 
-    # 🏛️ TAX
-    if "tax" in q:
-        return (
-            f"🏛️ Tax Analysis:\n\n"
-            f"• Annual Income: ₹{income:,}\n"
-            f"• Estimated Tax: ₹{tax_amount:,}\n\n"
-            f"💡 Tips:\n"
-            f"• Use 80C deductions\n"
-            f"• Consider ELSS / PPF\n"
-            f"• Health insurance (80D)"
-        )
-if "sip" in q or "investment" in q:
-    return f"📈 Investing ₹{sip} monthly for {years} years can grow to ₹{int(future_value):,}"
-    # DEFAULT
+    # # -------------------------
+# 🏛️ TAX
+# -------------------------
+if "tax" in q:
     return (
-        "🤖 I can help you with:\n"
-        "• Buying decisions\n"
-        "• Investment planning\n"
-        "• Savings analysis\n"
-        "• Tax advice\n\n"
-        "👉 Try: 'Can I buy iPhone for 80000?'"
+        f"🏛️ Tax Analysis:\n\n"
+        f"• Annual Income: ₹{income:,}\n"
+        f"• Estimated Tax: ₹{tax_amount:,}\n\n"
+        f"💡 Tips:\n"
+        f"• Use 80C deductions\n"
+        f"• Consider ELSS / PPF\n"
+        f"• Health insurance (80D)"
     )
+
+# -------------------------
+# 📈 SIP / INVESTMENT
+# -------------------------
+if "sip" in q or "investment" in q:
+    return (
+        f"📈 Investment Projection:\n\n"
+        f"• Monthly Investment: ₹{sip:,}\n"
+        f"• Duration: {years} years\n"
+        f"• Expected Value: ₹{int(future_value):,}\n\n"
+        f"👉 Consistent investing leads to compounding growth."
+    )
+
+# -------------------------
+# DEFAULT
+# -------------------------
+return (
+    "🤖 I can help you with:\n"
+    "• Buying decisions\n"
+    "• Investment planning\n"
+    "• Savings analysis\n"
+    "• Tax advice\n\n"
+    "👉 Try: 'Can I buy iPhone for 80000?'"
+)
 
 # -------------------------
 # EXECUTION
