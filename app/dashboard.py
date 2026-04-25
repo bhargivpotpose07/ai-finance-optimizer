@@ -29,7 +29,13 @@ h1, h2, h3 { color: #e2e8f0; }
 # -------------------------
 st.title("💰 AI Financial Optimizer")
 st.caption("AI + Government Policy Based Financial System")
-
+st.markdown("""
+### 💡 What this app does
+- Analyze your income & expenses  
+- Apply government tax logic  
+- Suggest investment strategy  
+- Generate professional report  
+""")
 # -------------------------
 # SIDEBAR INPUT
 # -------------------------
@@ -48,6 +54,9 @@ monthly_income = income / 12
 monthly_expense = rent + food + shopping + entertainment
 monthly_savings = monthly_income - monthly_expense
 savings_rate = (monthly_savings / monthly_income) * 100 if monthly_income else 0
+if monthly_savings < 0:
+    st.error("You are overspending. Reduce expenses.")
+
 
 # -------------------------
 # POLICY ENGINE
@@ -57,7 +66,8 @@ policy = apply_policies(income, monthly_savings)
 # -------------------------
 # METRICS
 # -------------------------
-st.subheader("📊 Financial Overview")
+col1.metric("Expense", f"₹{int(monthly_expense):,}")
+col2.metric("Savings", f"₹{int(monthly_savings):,}")
 
 col1, col2, col3, col4 = st.columns(4)
 
