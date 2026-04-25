@@ -190,32 +190,141 @@ if user_input:
         st.markdown(reply)
 
 # -------------------------
-# PDF (PREMIUM STRUCTURE)
-# -------------------------
-def generate_pdf(file):
-    from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer
-    from reportlab.lib.styles import ParagraphStyle
+def generate_pdf(file_path):
+    try:
+        from reportlab.platypus import (
+            SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, PageBreak
+        )
+        from reportlab.lib import colors
+        from reportlab.lib.styles import ParagraphStyle
+        from reportlab.lib.pagesizes import A4
 
-    doc = SimpleDocTemplate(file)
+        doc = SimpleDocTemplate(file_path, pagesize=A4)
 
-    title = ParagraphStyle(name="Title", fontSize=22)
-    body = ParagraphStyle(name="Body", fontSize=12)
+        # -------------------------
+        # STYLES
+        # -------------------------
+        title = ParagraphStyle(name="Title", fontSize=28, alignment=1, spaceAfter=30)
+        subtitle = ParagraphStyle(name="Subtitle", fontSize=14, alignment=1, spaceAfter=20)
+        heading = ParagraphStyle(name="Heading", fontSize=18, spaceAfter=12)
+        body = ParagraphStyle(name="Body", fontSize=12, spaceAfter=10)
 
-    content = []
+        content = []
 
-    content.append(Paragraph("AI FINANCE REPORT", title))
-    content.append(Spacer(1, 20))
-    content.append(Paragraph(f"Income: ₹{int(monthly_income):,}", body))
-    content.append(Paragraph(f"Savings: ₹{int(monthly_savings):,}", body))
-    content.append(Paragraph(f"Tax: ₹{tax_amount:,}", body))
+        # -------------------------
+        # COVER PAGE
+        # -------------------------
+        content.append(Spacer(1, 200))
+        content.append(Paragraph("AI FINANCE REPORT", title))
+        content.append(Paragraph("Financial Analysis & Advisory", subtitle))
+        content.append(Paragraph(datetime.now().strftime("%d %B %Y"), body))
+        content.append(PageBreak())
 
-    doc.build(content)
+        # -------------------------
+        # EXECUTIVE SUMMARY
+        # -------------------------
+        content.append(Paragraph("Executive Summary", heading))
 
-if st.button("📄 Generate Premium Report"):
-    generate_pdf("report.pdf")
-    with open("report.pdf", "rb") as f:
-        st.download_button("Download Report", f, "report.pdf")
+        content.append(Paragraph(
+            f"This report analyzes your financial position based on income, expenses, and savings behavior.",
+            body
+        ))
 
+        content.append(Paragraph(
+            f"Your monthly income is <b>₹{int(monthly_income):,}</b> and expenses are "
+            f"<b>₹{int(monthly_expense):,}</b>, resulting in savings of "
+            f"<b>₹{int(monthly_savings):,}</b>.",
+            body
+        ))
+
+        content.append(Paragraph(
+            f"Your savings rate is <b>{int(savings_rate)}%</b>, indicating "
+            f"{'strong' if savings_rate > 20 else 'moderate' if savings_rate > 10 else 'low'} financial health.",
+            body
+        ))
+
+        # -------------------------
+        # FINANCIAL BREAKDOWN TABLE
+        # -------------------------
+        content.append(Spacer(1, 20))
+        content.append(Paragraph("Financial Breakdown", heading))
+
+        table_data = [
+            ["Metric", "Amount (₹)"],
+            ["Monthly Income", f"{int(monthly_income):,}"],
+            ["Monthly Expenses", f"{int(monthly_expense):,}"],
+            ["Monthly Savings", f"{int(monthly_savings):,}"],
+            ["Annual Tax", f"{tax_amount:,}"]
+        ]
+
+        table = Table(table_data, colWidths=[250, 150])
+
+        table.setStyle(TableStyle([
+            ("BACKGROUND", (0,0), (-1,0), colors.HexColor("#111827")),
+            ("TEXTCOLOR", (0,0), (-1,0), colors.white),
+            ("GRID", (0,0), (-1,-1), 0.5, colors.grey),
+            ("FONTNAME", (0,0), (-1,0), "Helvetica-Bold")
+        ]))
+
+        content.append(table)
+
+        # -------------------------
+        # EXPENSE ANALYSIS
+        # -------------------------
+        content.append(Spacer(1, 20))
+        content.append(Paragraph("Expense Analysis", heading))
+
+        content.append(Paragraph(
+            f"Your total monthly expenses are ₹{int(monthly_expense):,}. "
+            f"Major spending categories include rent, food, and discretionary expenses.",
+            body
+        ))
+
+        # -------------------------
+        # TAX ANALYSIS
+        # -------------------------
+        content.append(Spacer(1, 20))
+        content.append(Paragraph("Tax Analysis", heading))
+
+        content.append(Paragraph(
+            f"Based on your annual income, your estimated tax liability is "
+            f"<b>₹{tax_amount:,}</b> under the current tax structure.",
+            body
+        ))
+
+        content.append(Paragraph(
+            "Consider tax-saving investments and deductions to reduce liability.",
+            body
+        ))
+
+        # -------------------------
+        # RECOMMENDATIONS
+        # -------------------------
+        content.append(Spacer(1, 20))
+        content.append(Paragraph("Recommendations", heading))
+
+        if savings_rate < 20:
+            content.append(Paragraph(
+                "• Increase savings by reducing discretionary expenses.\n"
+                "• Track monthly spending more closely.\n"
+                "• Build an emergency fund of at least 6 months.",
+                body
+            ))
+        else:
+            content.append(Paragraph(
+                "• Maintain current savings discipline.\n"
+                "• Increase investment allocation.\n"
+                "• Diversify portfolio for long-term growth.",
+                body
+            ))
+
+        # -------------------------
+        # BUILD PDF
+        # -------------------------
+        doc.build(content)
+
+    except Exception as e:
+        st.error(f"PDF error: {e}")
 # -------------------------
 # FOOTER
 # -------------------------
