@@ -126,7 +126,76 @@ with col2:
     ax.pie(chart_data["Amount"], labels=chart_data["Category"], autopct='%1.1f%%')
     st.pyplot(fig)
 
+    # -------------------------
+# 📈 INVESTMENT SECTION (ADD HERE)
 # -------------------------
+
+st.subheader("📈 Investment & Wealth Planning")
+
+col1, col2 = st.columns(2)
+
+# -------------------------
+# SIP CALCULATOR
+# -------------------------
+with col1:
+    st.markdown("### 💰 SIP Growth")
+
+    sip = st.number_input("Monthly Investment (₹)", value=5000)
+    years = st.slider("Investment Duration (Years)", 1, 30, 10)
+    rate = st.slider("Expected Return (%)", 5, 20, 12)
+
+    months = years * 12
+    monthly_rate = rate / 12 / 100
+
+    future_value = sip * (((1 + monthly_rate)**months - 1) / monthly_rate) * (1 + monthly_rate)
+
+    st.metric("Projected Wealth", f"₹{int(future_value):,}")
+
+
+# -------------------------
+# GOAL PLANNING
+# -------------------------
+with col2:
+    st.markdown("### 🎯 Goal Planning")
+
+    goal = st.number_input("Target Amount (₹)", value=1000000)
+    years_goal = st.slider("Years to Achieve Goal", 1, 20, 5)
+
+    required_sip = goal / (years_goal * 12)
+
+    st.metric("Required Monthly Investment", f"₹{int(required_sip):,}")
+
+
+# -------------------------
+# SMART ALLOCATION
+# -------------------------
+st.markdown("### 🧠 Smart Portfolio Allocation")
+
+if monthly_savings < 10000:
+    allocation = {
+        "Equity": "40%",
+        "Debt": "40%",
+        "Emergency": "20%"
+    }
+elif monthly_savings < 30000:
+    allocation = {
+        "Equity": "60%",
+        "Debt": "25%",
+        "Emergency": "15%"
+    }
+else:
+    allocation = {
+        "Equity": "70%",
+        "Debt": "20%",
+        "Emergency": "10%"
+    }
+
+for k, v in allocation.items():
+    st.write(f"• {k}: {v}")
+
+
+
+ #   ------------------------
 # POLICY SECTION
 # -------------------------
 st.subheader("🏛️ Government Policy Insights")
@@ -259,7 +328,8 @@ def smart_chat(q):
             f"• Consider ELSS / PPF\n"
             f"• Health insurance (80D)"
         )
-
+if "sip" in q or "investment" in q:
+    return f"📈 Investing ₹{sip} monthly for {years} years can grow to ₹{int(future_value):,}"
     # DEFAULT
     return (
         "🤖 I can help you with:\n"
