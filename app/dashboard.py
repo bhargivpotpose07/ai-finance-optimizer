@@ -280,67 +280,137 @@ def generate_pdf(file_path):
         from reportlab.lib.styles import ParagraphStyle
         from reportlab.lib.pagesizes import A4
         import matplotlib.pyplot as plt
+        import os
 
         doc = SimpleDocTemplate(file_path, pagesize=A4)
 
+        # -------------------------
+        # STYLES (PROFESSIONAL)
+        # -------------------------
         title = ParagraphStyle(name="Title", fontSize=28, alignment=1, spaceAfter=30)
+        subtitle = ParagraphStyle(name="Subtitle", fontSize=14, alignment=1, spaceAfter=20)
         heading = ParagraphStyle(name="Heading", fontSize=18, spaceAfter=12)
         body = ParagraphStyle(name="Body", fontSize=11, spaceAfter=10)
 
         content = []
 
-        # COVER
+        # -------------------------
+        # COVER PAGE
+        # -------------------------
         content.append(Spacer(1, 200))
         content.append(Paragraph("AI FINANCE REPORT", title))
+        content.append(Paragraph("Financial Analysis & Advisory", subtitle))
         content.append(Paragraph(datetime.now().strftime("%d %B %Y"), body))
         content.append(PageBreak())
 
-        # SUMMARY
+        # -------------------------
+        # EXECUTIVE SUMMARY
+        # -------------------------
         content.append(Paragraph("Executive Summary", heading))
+
+        health = (
+            "Strong" if savings_rate > 20 else
+            "Moderate" if savings_rate > 10 else
+            "Weak"
+        )
+
         content.append(Paragraph(
-            f"Income ₹{int(monthly_income):,}, Expenses ₹{int(monthly_expense):,}, Savings ₹{int(monthly_savings):,}.",
+            f"This report evaluates your financial position based on income, expenses, and savings.\n\n"
+            f"• Monthly Income: ₹{int(monthly_income):,}\n"
+            f"• Monthly Expenses: ₹{int(monthly_expense):,}\n"
+            f"• Monthly Savings: ₹{int(monthly_savings):,}\n\n"
+            f"Your savings rate is <b>{int(savings_rate)}%</b>, indicating <b>{health}</b> financial health.",
             body
         ))
 
-        # TABLE
+        # -------------------------
+        # FINANCIAL SNAPSHOT TABLE
+        # -------------------------
+        content.append(Spacer(1, 20))
+        content.append(Paragraph("Financial Snapshot", heading))
+
         table_data = [
             ["Metric", "Value"],
-            ["Income", f"₹{int(monthly_income):,}"],
-            ["Expenses", f"₹{int(monthly_expense):,}"],
-            ["Savings", f"₹{int(monthly_savings):,}"],
-            ["Tax", f"₹{tax_amount:,}"]
+            ["Monthly Income", f"₹{int(monthly_income):,}"],
+            ["Monthly Expenses", f"₹{int(monthly_expense):,}"],
+            ["Monthly Savings", f"₹{int(monthly_savings):,}"],
+            ["Savings Rate", f"{int(savings_rate)}%"],
+            ["Annual Tax", f"₹{tax_amount:,}"]
         ]
 
-        table = Table(table_data)
+        table = Table(table_data, colWidths=[250, 150])
         table.setStyle(TableStyle([
-            ("BACKGROUND", (0,0), (-1,0), colors.black),
+            ("BACKGROUND", (0,0), (-1,0), colors.HexColor("#111827")),
             ("TEXTCOLOR", (0,0), (-1,0), colors.white),
-            ("GRID", (0,0), (-1,-1), 0.5, colors.grey)
+            ("GRID", (0,0), (-1,-1), 0.5, colors.grey),
+            ("FONTNAME", (0,0), (-1,0), "Helvetica-Bold")
         ]))
 
         content.append(table)
 
-        # CHART
-        fig, ax = plt.subplots()
-        ax.pie(chart_data["Amount"], labels=chart_data["Category"], autopct='%1.1f%%')
-        chart_path = "chart.png"
-        plt.savefig(chart_path)
-        plt.close()
-
+        # -------------------------
+        # EXPENSE CHART
+        # -------------------------
         content.append(Spacer(1, 20))
         content.append(Paragraph("Expense Distribution", heading))
+
+        fig, ax = plt.subplots()
+        ax.pie(
+            chart_data["Amount"],
+            labels=chart_data["Category"],
+            autopct='%1.1f%%'
+        )
+
+        chart_path = "expense_chart.png"
+        plt.savefig(chart_path, bbox_inches='tight')
+        plt.close()
+
         content.append(Image(chart_path, width=400, height=300))
 
-        # RECOMMENDATION
+        # -------------------------
+        # TAX ANALYSIS
+        # -------------------------
         content.append(Spacer(1, 20))
-        content.append(Paragraph("Recommendations", heading))
+        content.append(Paragraph("Tax Analysis", heading))
+
+        content.append(Paragraph(
+            f"Based on your annual income, your estimated tax liability is "
+            f"<b>₹{tax_amount:,}</b>. Consider using tax-saving instruments "
+            f"such as ELSS, PPF, and insurance deductions.",
+            body
+        ))
+
+        # -------------------------
+        # RECOMMENDATIONS
+        # -------------------------
+        content.append(Spacer(1, 20))
+        content.append(Paragraph("Strategic Recommendations", heading))
 
         if savings_rate < 20:
-            content.append(Paragraph("Increase savings and reduce expenses.", body))
+            content.append(Paragraph(
+                "• Reduce discretionary expenses\n"
+                "• Increase savings to at least 20%\n"
+                "• Build emergency fund (6 months)\n"
+                "• Start SIP investments",
+                body
+            ))
         else:
-            content.append(Paragraph("Maintain discipline and invest.", body))
+            content.append(Paragraph(
+                "• Maintain strong savings discipline\n"
+                "• Increase investment allocation\n"
+                "• Diversify portfolio\n"
+                "• Optimize tax planning",
+                body
+            ))
 
+        # -------------------------
+        # BUILD PDF
+        # -------------------------
         doc.build(content)
+
+        # Clean up chart file
+        if os.path.exists(chart_path):
+            os.remove(chart_path)
 
     except Exception as e:
         st.error(f"PDF error: {e}")
