@@ -136,7 +136,7 @@ for k, v in policy["allocation"].items():
     st.write(f"**{k}:** {v}")
 
 # -------------------------
-# WEALTH
+# WEALTH PROJECTION
 # -------------------------
 st.subheader("📈 Wealth Projection")
 
@@ -185,7 +185,7 @@ if st.button("Generate PDF Report"):
             st.download_button("Download PDF", f, "finance_report.pdf")
 
 # -------------------------
-# 💬 CHATBOT (FINAL FIXED)
+# 💬 SMART CHATBOT (FINAL)
 # -------------------------
 st.subheader("💬 AI Financial Advisor")
 
@@ -206,41 +206,50 @@ def financial_chat(query):
     q = query.lower()
     amt = extract_amount(q)
 
-    # 🛒 NECESSITIES FIRST
+    savings = monthly_savings
+    income_val = monthly_income
+
+    # NECESSITIES
     if any(x in q for x in ["milk","food","groceries","vegetables","medicine"]):
-        return f"🛒 This is a basic necessity. ₹{amt if amt else ''} is fine to spend."
+        return f"🛒 This is essential. Your savings: ₹{int(savings):,}. This will not impact your finances."
 
-    # 📱 MEDIUM
+    # MEDIUM PURCHASE
     if any(x in q for x in ["phone","iphone","laptop","bike"]):
-        if amt:
-            if amt > monthly_savings * 3:
-                return f"⚠️ ₹{amt} is too high vs your savings."
-            elif amt < monthly_savings:
-                return f"✅ ₹{amt} is affordable."
-            else:
-                return "⚠️ Manageable but impacts savings."
-        return "📱 Depends on your savings."
+        if savings <= 0:
+            return f"❌ You have ₹{int(savings):,} savings. Avoid this purchase."
 
-    # 🏡 BIG
+        if amt:
+            if amt > savings * 3:
+                return f"⚠️ Cost ₹{amt:,} is too high vs savings ₹{int(savings):,}."
+            elif amt < savings:
+                return f"✅ Affordable. Cost ₹{amt:,}, savings ₹{int(savings):,}."
+            else:
+                return f"⚠️ It will impact savings significantly."
+
+        return f"📱 Your savings ₹{int(savings):,}. Evaluate before buying."
+
+    # BIG PURCHASE
     if any(x in q for x in ["house","home","car"]):
-        if amt:
-            if amt > monthly_income * 50:
-                return f"❌ ₹{amt} is too large vs your income."
-            elif amt > monthly_income * 20:
-                return f"⚠️ ₹{amt} needs EMI planning."
-            else:
-                return "🏡 Possible with planning."
-        return "🏡 Plan finances carefully."
+        return (
+            f"🏡 Big decision.\n\n"
+            f"Income: ₹{int(income_val):,}/month\n"
+            f"Savings: ₹{int(savings):,}/month\n\n"
+            f"Ensure EMI < 30–40% income and emergency fund."
+        )
 
-    # 📈 OTHER
+    # INVEST
     if "invest" in q:
-        return f"📈 Follow {policy['risk_profile']} strategy."
-    if "save" in q:
-        return "💡 Save at least 20% income."
-    if "tax" in q:
-        return f"🏛️ {policy['better_regime']} is better."
+        return f"📈 Risk profile: {policy['risk_profile']}. Invest accordingly."
 
-    return "🤖 Ask about buying, investing, tax, or savings."
+    # SAVE
+    if "save" in q:
+        return f"💰 Savings rate: {int(savings_rate)}%. Aim for 20–30%."
+
+    # TAX
+    if "tax" in q:
+        return f"🏛️ {policy['better_regime']} regime saves more tax."
+
+    return "🤖 Ask about buying, investing, savings, or tax."
 
 if user_input:
     st.session_state.messages.append({"role":"user","content":user_input})
