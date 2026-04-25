@@ -142,48 +142,69 @@ st.write("• Luxury: 28%")
 # -------------------------
 # 💬 SMART CHATBOT (UPGRADED)
 # -------------------------
+# -------------------------
+# 💬 AI CHATBOT (FINAL FIX)
+# -------------------------
+st.subheader("💬 AI Financial Advisor")
+
+if "messages" not in st.session_state:
+    st.session_state.messages = []
+
+# DISPLAY OLD MESSAGES
+for msg in st.session_state.messages:
+    with st.chat_message(msg["role"]):
+        st.markdown(msg["content"])
+
+# INPUT BOX
+user_input = st.chat_input("Ask: Can I buy iPhone for 80000?")
+
+# CHAT LOGIC
 def smart_chat(q):
     q = q.lower()
     nums = re.findall(r'\d+', q)
     amt = int(nums[0]) if nums else None
 
     if "milk" in q or "food" in q:
-        return f"🛒 Essential expense. With ₹{int(monthly_savings):,} savings, this is safe."
+        return f"🛒 Essential expense. With ₹{int(monthly_savings):,} savings, safe to buy."
 
     if "buy" in q:
         if monthly_savings <= 0:
-            return "❌ You currently have no savings. Avoid purchases."
+            return "❌ You have no savings currently."
 
         if amt:
             if amt > monthly_savings * 3:
-                return f"⚠️ ₹{amt:,} is too expensive vs your savings ₹{int(monthly_savings):,}."
+                return f"⚠️ ₹{amt:,} is too expensive vs savings ₹{int(monthly_savings):,}."
             elif amt < monthly_savings:
-                return f"✅ ₹{amt:,} is affordable based on your savings."
+                return f"✅ ₹{amt:,} is affordable."
             else:
-                return f"⚠️ This purchase will significantly impact savings."
+                return "⚠️ This will impact your savings significantly."
 
-        return f"📊 Your savings ₹{int(monthly_savings):,}. Evaluate before buying."
+        return f"📊 Your savings ₹{int(monthly_savings):,}. Evaluate purchase."
 
     if "house" in q:
-        return (
-            f"🏡 Major purchase.\n\n"
-            f"Income: ₹{int(monthly_income):,}/month\n"
-            f"Savings: ₹{int(monthly_savings):,}/month\n\n"
-            f"Ensure EMI < 30–40% and emergency fund."
-        )
-
-    if "invest" in q:
-        return (
-            "📈 Suggested:\n"
-            "• 50% Equity\n"
-            "• 30% Debt\n"
-            "• 20% Emergency fund"
-        )
+        return f"🏡 Income ₹{int(monthly_income):,}, savings ₹{int(monthly_savings):,}. Plan EMI carefully."
 
     if "tax" in q:
-        return f"🏛️ Your estimated tax is ₹{tax_amount:,}"
+        return f"🏛️ Estimated tax ₹{tax_amount:,}"
 
-    return "🤖 Ask about buying, investing, tax, or savings."
+    if "invest" in q:
+        return "📈 Invest: Equity + Debt + Emergency fund"
+
+    return "🤖 Ask about buying, tax, saving, investing."
+
+# EXECUTION
+if user_input:
+    st.session_state.messages.append({"role": "user", "content": user_input})
+
+    with st.chat_message("user"):
+        st.markdown(user_input)
+
+    reply = smart_chat(user_input)
+
+    st.session_state.messages.append({"role": "assistant", "content": reply})
+
+    with st.chat_message("assistant"):
+        st.markdown(reply)
 # -------------------------
 def generate_pdf(file_path):
     try:
