@@ -143,6 +143,26 @@ st.write("• Luxury: 28%")
 # 💬 SMART CHATBOT (UPGRADED)
 # -------------------------
 # -------------------------
+# -------------------------
+# 💬 AI FINANCIAL CHATBOT (SMART)
+# -------------------------
+st.subheader("💬 AI Financial Advisor")
+
+# INIT SESSION
+if "messages" not in st.session_state:
+    st.session_state.messages = []
+
+# DISPLAY CHAT HISTORY
+for msg in st.session_state.messages:
+    with st.chat_message(msg["role"]):
+        st.markdown(msg["content"])
+
+# INPUT BOX
+user_input = st.chat_input("Ask: Can I buy iPhone for 80000?")
+
+# -------------------------
+# 🧠 SMART CHAT FUNCTION
+# -------------------------
 def smart_chat(q):
     q = q.lower()
 
@@ -153,9 +173,7 @@ def smart_chat(q):
     income_val = monthly_income
     expense = monthly_expense
 
-    # -------------------------
     # 🏡 HOUSE
-    # -------------------------
     if "house" in q or "home" in q:
         emi_limit = income_val * 0.35
         return (
@@ -166,82 +184,83 @@ def smart_chat(q):
             f"• Monthly Savings: ₹{int(savings):,}\n\n"
             f"💡 Analysis:\n"
             f"• Safe EMI range: ₹{int(emi_limit):,}/month\n"
-            f"• You need at least 6 months emergency fund\n\n"
-            f"👉 Advice:\n"
+            f"• You should have at least 6 months emergency fund\n\n"
+            f"👉 Recommendation:\n"
             f"Proceed only if EMI fits within limit and savings remain stable."
         )
 
-    # -------------------------
-    # 📱 PURCHASE DECISION
-    # -------------------------
+    # 📱 BUY DECISION
     if "buy" in q:
         if savings <= 0:
             return (
                 "❌ You currently have no savings.\n\n"
-                "👉 Advice: Improve savings before making purchases."
+                "👉 Improve savings before making purchases."
             )
 
         if amt:
             ratio = amt / savings
+
+            impact = (
+                "High impact ❌" if ratio > 3 else
+                "Moderate impact ⚠️" if ratio > 1 else
+                "Low impact ✅"
+            )
+
+            decision = (
+                "Avoid or delay purchase" if ratio > 3 else
+                "Plan before buying" if ratio > 1 else
+                "Safe to buy"
+            )
 
             return (
                 f"📊 Financial Evaluation:\n"
                 f"• Item Cost: ₹{amt:,}\n"
                 f"• Monthly Savings: ₹{int(savings):,}\n"
                 f"• Cost-to-savings ratio: {round(ratio,2)}x\n\n"
-                f"💡 Analysis:\n"
-                f"{'High impact purchase' if ratio > 3 else 'Moderate impact' if ratio > 1 else 'Low impact'}\n\n"
-                f"👉 Recommendation:\n"
-                f"{'Avoid or delay purchase' if ratio > 3 else 'Plan before buying' if ratio > 1 else 'Safe to buy'}"
+                f"💡 Impact: {impact}\n\n"
+                f"👉 Recommendation: {decision}"
             )
 
         return (
-            f"📊 Your savings are ₹{int(savings):,}.\n"
-            f"👉 Provide price for better advice."
+            f"📊 Your monthly savings: ₹{int(savings):,}\n"
+            f"👉 Please provide item price for better advice."
         )
 
-    # -------------------------
     # 📈 INVESTMENT
-    # -------------------------
     if "invest" in q:
         return (
-            f"📈 Investment Strategy Based on Your Profile:\n\n"
+            f"📈 Investment Strategy:\n\n"
             f"• Monthly Savings: ₹{int(savings):,}\n\n"
             f"💡 Suggested Allocation:\n"
             f"• 50% Equity (growth)\n"
             f"• 30% Debt (stability)\n"
             f"• 20% Emergency fund\n\n"
-            f"👉 Start SIP investments for long-term growth."
+            f"👉 Start SIP for long-term growth."
         )
 
-    # -------------------------
     # 💰 SAVINGS
-    # -------------------------
-    if "save" in q:
+    if "save" in q or "savings" in q:
         return (
             f"💰 Savings Analysis:\n\n"
             f"• Monthly Savings: ₹{int(savings):,}\n"
             f"• Savings Rate: {int(savings_rate)}%\n\n"
-            f"💡 Ideal savings rate: 20–30%\n\n"
+            f"💡 Ideal: 20–30%\n\n"
             f"👉 {'Increase savings urgently' if savings_rate < 20 else 'You are doing well'}"
         )
 
-    # -------------------------
     # 🏛️ TAX
-    # -------------------------
     if "tax" in q:
         return (
             f"🏛️ Tax Analysis:\n\n"
             f"• Annual Income: ₹{income:,}\n"
             f"• Estimated Tax: ₹{tax_amount:,}\n\n"
-            f"💡 Advice:\n"
-            f"• Use deductions (80C, 80D)\n"
-            f"• Consider tax-saving investments"
+            f"💡 Tips:\n"
+            f"• Use 80C deductions\n"
+            f"• Consider ELSS / PPF\n"
+            f"• Health insurance (80D)"
         )
 
-    # -------------------------
     # DEFAULT
-    # -------------------------
     return (
         "🤖 I can help you with:\n"
         "• Buying decisions\n"
@@ -250,6 +269,22 @@ def smart_chat(q):
         "• Tax advice\n\n"
         "👉 Try: 'Can I buy iPhone for 80000?'"
     )
+
+# -------------------------
+# EXECUTION
+# -------------------------
+if user_input:
+    st.session_state.messages.append({"role": "user", "content": user_input})
+
+    with st.chat_message("user"):
+        st.markdown(user_input)
+
+    reply = smart_chat(user_input)
+
+    st.session_state.messages.append({"role": "assistant", "content": reply})
+
+    with st.chat_message("assistant"):
+        st.markdown(reply)
     
 # -------------------------
 def generate_pdf(file_path):
