@@ -4,7 +4,6 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 import streamlit as st
 import pandas as pd
 import matplotlib.pyplot as plt
-from datetime import datetime
 from utils.policy_engine import apply_policies
 
 # -------------------------
@@ -16,18 +15,19 @@ st.set_page_config(page_title="AI Finance Optimizer", layout="wide")
 # HEADER
 # -------------------------
 st.title("💰 AI Financial Optimizer")
-st.caption("Income = Annual | Expenses = Monthly")
+st.markdown("### 📊 Smart, Interactive Financial Dashboard")
 
 # -------------------------
 # SIDEBAR
 # -------------------------
-st.sidebar.header("⚙️ Inputs")
+st.sidebar.header("⚙️ Customize Your Finances")
 
 income = st.sidebar.number_input("Annual Income (₹)", value=1200000)
-rent = st.sidebar.slider("Rent", 0, 50000, 20000)
-food = st.sidebar.slider("Food", 0, 20000, 8000)
-shopping = st.sidebar.slider("Shopping", 0, 20000, 5000)
-entertainment = st.sidebar.slider("Entertainment", 0, 15000, 4000)
+
+rent = st.sidebar.slider("🏠 Rent", 0, 50000, 20000)
+food = st.sidebar.slider("🍔 Food", 0, 20000, 8000)
+shopping = st.sidebar.slider("🛍️ Shopping", 0, 20000, 5000)
+entertainment = st.sidebar.slider("🎬 Entertainment", 0, 15000, 4000)
 
 # -------------------------
 # CALCULATIONS
@@ -42,18 +42,30 @@ policy = apply_policies(income, monthly_savings)
 # -------------------------
 # METRICS
 # -------------------------
-st.subheader("📊 Overview")
+st.subheader("📈 Financial Overview")
 
 c1, c2, c3, c4 = st.columns(4)
-c1.metric("Income", f"₹{int(monthly_income):,}")
-c2.metric("Expenses", f"₹{int(monthly_expense):,}")
-c3.metric("Savings", f"₹{int(monthly_savings):,}")
-c4.metric("Savings %", f"{int(savings_rate)}%")
+c1.metric("💰 Income", f"₹{int(monthly_income):,}")
+c2.metric("💸 Expenses", f"₹{int(monthly_expense):,}")
+c3.metric("💾 Savings", f"₹{int(monthly_savings):,}")
+c4.metric("📊 Savings %", f"{int(savings_rate)}%")
+
+# -------------------------
+# INSIGHTS (LIVE FEEDBACK)
+# -------------------------
+st.subheader("🧠 Insights")
+
+if savings_rate < 10:
+    st.error("⚠️ Very low savings. Reduce expenses immediately.")
+elif savings_rate < 20:
+    st.warning("⚠️ Moderate savings. Try improving.")
+else:
+    st.success("✅ Excellent financial health!")
 
 # -------------------------
 # CHARTS
 # -------------------------
-st.subheader("📈 Expense Analysis")
+st.subheader("📊 Expense Visualization")
 
 chart_data = pd.DataFrame({
     "Category": ["Rent", "Food", "Shopping", "Entertainment"],
@@ -73,50 +85,16 @@ with col2:
 # -------------------------
 # POLICY SECTION
 # -------------------------
-st.subheader("🏛️ Policy Insights")
+st.subheader("🏛️ Smart Recommendations")
 
-st.write(f"**Recommended Tax Regime:** {policy['better_regime']}")
+st.write(f"**Tax Regime:** {policy['better_regime']}")
 st.write(f"**Risk Profile:** {policy['risk_profile']}")
 
 for k, v in policy["allocation"].items():
-    st.write(f"- {k}: {v}")
+    st.write(f"• {k}: {v}")
 
 # -------------------------
-# PDF (CORPORATE STYLE)
-# -------------------------
-def generate_pdf(file_path):
-    try:
-        from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer
-        from reportlab.lib.styles import ParagraphStyle
-        from reportlab.lib.pagesizes import A4
-
-        doc = SimpleDocTemplate(file_path, pagesize=A4)
-
-        title = ParagraphStyle(name="Title", fontSize=24)
-        body = ParagraphStyle(name="Body", fontSize=12)
-
-        content = []
-
-        content.append(Spacer(1, 200))
-        content.append(Paragraph("AI FINANCE REPORT", title))
-        content.append(Spacer(1, 20))
-        content.append(Paragraph(f"Income: ₹{int(monthly_income):,}", body))
-        content.append(Paragraph(f"Savings: ₹{int(monthly_savings):,}", body))
-        content.append(Paragraph(f"Savings Rate: {int(savings_rate)}%", body))
-
-        doc.build(content)
-
-    except Exception as e:
-        st.error(f"PDF error: {e}")
-
-if st.button("📄 Generate Report"):
-    generate_pdf("report.pdf")
-    if os.path.exists("report.pdf"):
-        with open("report.pdf", "rb") as f:
-            st.download_button("Download PDF", f, "report.pdf")
-
-# -------------------------
-# CHATBOT (SMART)
+# CHATBOT (INTERACTIVE)
 # -------------------------
 st.subheader("💬 AI Financial Advisor")
 
@@ -127,29 +105,22 @@ for msg in st.session_state.messages:
     with st.chat_message(msg["role"]):
         st.markdown(msg["content"])
 
-user_input = st.chat_input("Ask: Can I buy iPhone for 80000?")
+user_input = st.chat_input("Ask anything...")
 
-def extract_amount(text):
-    nums = re.findall(r'\d+', text)
-    return int(nums[0]) if nums else None
-
-def financial_chat(query):
-    q = query.lower()
+def financial_chat(q):
+    q = q.lower()
     savings = monthly_savings
 
-    if "milk" in q:
-        return f"🛒 Essential. Savings ₹{int(savings):,}, no issue."
-
     if "iphone" in q:
-        return f"📱 You save ₹{int(savings):,}/month. Consider impact before buying."
-
+        return f"📱 You save ₹{int(savings):,}/month. Consider if this affects your savings."
     if "house" in q:
-        return f"🏡 Income ₹{int(monthly_income):,}, savings ₹{int(savings):,}. Plan EMI carefully."
-
+        return f"🏡 With ₹{int(savings):,}/month savings, plan EMI carefully."
+    if "milk" in q:
+        return "🛒 Basic need. No issue buying it."
     if "invest" in q:
         return f"📈 Follow {policy['risk_profile']} strategy."
 
-    return "🤖 Ask about buying, saving, investing."
+    return "🤖 Try asking about buying, saving, or investing."
 
 if user_input:
     st.session_state.messages.append({"role":"user","content":user_input})
