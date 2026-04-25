@@ -4,7 +4,7 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 import streamlit as st
 import pandas as pd
 import matplotlib.pyplot as plt
-from utils.policy_engine import apply_policies
+from datetime import datetime
 
 # -------------------------
 # PAGE CONFIG
@@ -12,15 +12,34 @@ from utils.policy_engine import apply_policies
 st.set_page_config(page_title="AI Finance Optimizer", layout="wide")
 
 # -------------------------
-# HEADER
+# PREMIUM UI STYLE
 # -------------------------
-st.title("💰 AI Financial Optimizer")
-st.markdown("### 📊 Smart, Interactive Financial Dashboard")
+st.markdown("""
+<style>
+.stMetric {
+    background: #111827;
+    padding: 15px;
+    border-radius: 12px;
+}
+h1, h2, h3 {
+    color: #e5e7eb;
+}
+.block-container {
+    padding-top: 2rem;
+}
+</style>
+""", unsafe_allow_html=True)
 
 # -------------------------
-# SIDEBAR
+# HEADER
 # -------------------------
-st.sidebar.header("⚙️ Customize Your Finances")
+st.title("💰 AI Finance Optimizer Pro")
+st.caption("Smart Financial Planning System")
+
+# -------------------------
+# SIDEBAR (MORE EXPENSES)
+# -------------------------
+st.sidebar.header("⚙️ Financial Inputs")
 
 income = st.sidebar.number_input("Annual Income (₹)", value=1200000)
 
@@ -28,48 +47,73 @@ rent = st.sidebar.slider("🏠 Rent", 0, 50000, 20000)
 food = st.sidebar.slider("🍔 Food", 0, 20000, 8000)
 shopping = st.sidebar.slider("🛍️ Shopping", 0, 20000, 5000)
 entertainment = st.sidebar.slider("🎬 Entertainment", 0, 15000, 4000)
+utilities = st.sidebar.slider("💡 Utilities (Electricity, Internet)", 0, 10000, 3000)
+transport = st.sidebar.slider("🚗 Transport", 0, 15000, 5000)
+health = st.sidebar.slider("🏥 Health", 0, 10000, 2000)
 
 # -------------------------
 # CALCULATIONS
 # -------------------------
 monthly_income = income / 12
-monthly_expense = rent + food + shopping + entertainment
+
+monthly_expense = (
+    rent + food + shopping + entertainment +
+    utilities + transport + health
+)
+
 monthly_savings = monthly_income - monthly_expense
 savings_rate = (monthly_savings / monthly_income) * 100 if monthly_income else 0
 
-policy = apply_policies(income, monthly_savings)
+# -------------------------
+# TAX LOGIC (UPDATED INDIA STYLE SIMPLIFIED)
+# -------------------------
+def calculate_tax(income):
+    # simplified new regime logic
+    tax = 0
+    if income > 1500000:
+        tax = income * 0.30
+    elif income > 1200000:
+        tax = income * 0.20
+    elif income > 700000:
+        tax = income * 0.10
+    else:
+        tax = 0
+    return int(tax)
+
+tax_amount = calculate_tax(income)
 
 # -------------------------
 # METRICS
 # -------------------------
-st.subheader("📈 Financial Overview")
+st.subheader("📊 Financial Dashboard")
 
 c1, c2, c3, c4 = st.columns(4)
-c1.metric("💰 Income", f"₹{int(monthly_income):,}")
-c2.metric("💸 Expenses", f"₹{int(monthly_expense):,}")
-c3.metric("💾 Savings", f"₹{int(monthly_savings):,}")
-c4.metric("📊 Savings %", f"{int(savings_rate)}%")
+
+c1.metric("Income", f"₹{int(monthly_income):,}")
+c2.metric("Expenses", f"₹{int(monthly_expense):,}")
+c3.metric("Savings", f"₹{int(monthly_savings):,}")
+c4.metric("Tax (Annual)", f"₹{tax_amount:,}")
 
 # -------------------------
-# INSIGHTS (LIVE FEEDBACK)
+# INSIGHTS
 # -------------------------
-st.subheader("🧠 Insights")
+st.subheader("🧠 AI Insights")
 
 if savings_rate < 10:
-    st.error("⚠️ Very low savings. Reduce expenses immediately.")
+    st.error("⚠️ Low savings — high financial risk")
 elif savings_rate < 20:
-    st.warning("⚠️ Moderate savings. Try improving.")
+    st.warning("⚠️ Moderate savings — can improve")
 else:
-    st.success("✅ Excellent financial health!")
+    st.success("✅ Strong financial health")
 
 # -------------------------
 # CHARTS
 # -------------------------
-st.subheader("📊 Expense Visualization")
+st.subheader("📊 Expense Analysis")
 
 chart_data = pd.DataFrame({
-    "Category": ["Rent", "Food", "Shopping", "Entertainment"],
-    "Amount": [rent, food, shopping, entertainment]
+    "Category": ["Rent","Food","Shopping","Entertainment","Utilities","Transport","Health"],
+    "Amount": [rent, food, shopping, entertainment, utilities, transport, health]
 })
 
 col1, col2 = st.columns(2)
@@ -85,18 +129,20 @@ with col2:
 # -------------------------
 # POLICY SECTION
 # -------------------------
-st.subheader("🏛️ Smart Recommendations")
+st.subheader("🏛️ Government Policy Insights")
 
-st.write(f"**Tax Regime:** {policy['better_regime']}")
-st.write(f"**Risk Profile:** {policy['risk_profile']}")
+st.write("**Income Tax (India - New Regime Approximation)**")
+st.write(f"Estimated Annual Tax: ₹{tax_amount:,}")
 
-for k, v in policy["allocation"].items():
-    st.write(f"• {k}: {v}")
+st.write("**GST Impact (Approx)**")
+st.write("• Essentials: 5%")
+st.write("• Electronics: 18%")
+st.write("• Luxury: 28%")
 
 # -------------------------
-# CHATBOT (INTERACTIVE)
+# 💬 SMART CHATBOT (UPGRADED)
 # -------------------------
-st.subheader("💬 AI Financial Advisor")
+st.subheader("💬 AI Financial Advisor Pro")
 
 if "messages" not in st.session_state:
     st.session_state.messages = []
@@ -105,22 +151,30 @@ for msg in st.session_state.messages:
     with st.chat_message(msg["role"]):
         st.markdown(msg["content"])
 
-user_input = st.chat_input("Ask anything...")
+user_input = st.chat_input("Ask anything about your finances...")
 
-def financial_chat(q):
+def smart_chat(q):
     q = q.lower()
-    savings = monthly_savings
 
-    if "iphone" in q:
-        return f"📱 You save ₹{int(savings):,}/month. Consider if this affects your savings."
-    if "house" in q:
-        return f"🏡 With ₹{int(savings):,}/month savings, plan EMI carefully."
-    if "milk" in q:
-        return "🛒 Basic need. No issue buying it."
+    if "buy" in q:
+        return (
+            f"Based on your monthly savings of ₹{int(monthly_savings):,}, "
+            f"this purchase should be evaluated carefully.\n\n"
+            f"If it exceeds 2–3x your savings, it may impact your financial stability."
+        )
+
     if "invest" in q:
-        return f"📈 Follow {policy['risk_profile']} strategy."
+        return (
+            "Diversify investments:\n"
+            "• Equity for growth\n"
+            "• Debt for stability\n"
+            "• Emergency fund first"
+        )
 
-    return "🤖 Try asking about buying, saving, or investing."
+    if "tax" in q:
+        return f"Your estimated tax is ₹{tax_amount:,} under current structure."
+
+    return "Ask about buying, saving, investing, or tax."
 
 if user_input:
     st.session_state.messages.append({"role":"user","content":user_input})
@@ -128,7 +182,7 @@ if user_input:
     with st.chat_message("user"):
         st.markdown(user_input)
 
-    reply = financial_chat(user_input)
+    reply = smart_chat(user_input)
 
     st.session_state.messages.append({"role":"assistant","content":reply})
 
@@ -136,7 +190,34 @@ if user_input:
         st.markdown(reply)
 
 # -------------------------
+# PDF (PREMIUM STRUCTURE)
+# -------------------------
+def generate_pdf(file):
+    from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer
+    from reportlab.lib.styles import ParagraphStyle
+
+    doc = SimpleDocTemplate(file)
+
+    title = ParagraphStyle(name="Title", fontSize=22)
+    body = ParagraphStyle(name="Body", fontSize=12)
+
+    content = []
+
+    content.append(Paragraph("AI FINANCE REPORT", title))
+    content.append(Spacer(1, 20))
+    content.append(Paragraph(f"Income: ₹{int(monthly_income):,}", body))
+    content.append(Paragraph(f"Savings: ₹{int(monthly_savings):,}", body))
+    content.append(Paragraph(f"Tax: ₹{tax_amount:,}", body))
+
+    doc.build(content)
+
+if st.button("📄 Generate Premium Report"):
+    generate_pdf("report.pdf")
+    with open("report.pdf", "rb") as f:
+        st.download_button("Download Report", f, "report.pdf")
+
+# -------------------------
 # FOOTER
 # -------------------------
 st.markdown("---")
-st.caption("🚀 Built by Bhargiv")
+st.caption("🚀 AI Finance Optimizer Pro")
