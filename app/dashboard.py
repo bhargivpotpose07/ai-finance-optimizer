@@ -14,13 +14,36 @@ from utils.policy_engine import apply_policies
 st.set_page_config(page_title="AI Finance Optimizer", layout="wide")
 
 # -------------------------
-# UI STYLE
+# PROFESSIONAL UI THEME
 # -------------------------
 st.markdown("""
 <style>
 body { background-color: #0f172a; }
-h1, h2, h3 { color: #e2e8f0; }
-.stMetric { background-color: #1e293b; padding: 15px; border-radius: 10px; }
+h1 { color: #f8fafc; font-weight: 700; }
+h2, h3 { color: #cbd5f5; }
+
+[data-testid="stMetric"] {
+    background-color: #1e293b;
+    border-radius: 12px;
+    padding: 15px;
+    text-align: center;
+}
+
+.stButton>button {
+    background-color: #3b82f6;
+    color: white;
+    border-radius: 10px;
+    padding: 10px;
+    font-weight: bold;
+}
+
+section[data-testid="stSidebar"] {
+    background-color: #020617;
+}
+
+p, span { color: #e2e8f0; }
+
+hr { border: 1px solid #334155; }
 </style>
 """, unsafe_allow_html=True)
 
@@ -28,18 +51,16 @@ h1, h2, h3 { color: #e2e8f0; }
 # HEADER
 # -------------------------
 st.title("💰 AI Financial Optimizer")
-st.caption("AI + Government Policy Based Financial System")
+
 st.markdown("""
-### 💡 What this app does
-- Analyze your income & expenses  
-- Apply government tax logic  
-- Suggest investment strategy  
-- Generate professional report  
+### 💡 Smart Financial Advisor  
+Analyze income, optimize taxes, and get investment strategies instantly.
 """)
+
 # -------------------------
 # SIDEBAR INPUT
 # -------------------------
-st.sidebar.header("⚙️ Financial Inputs")
+st.sidebar.header("⚙️ Inputs")
 
 income = st.sidebar.number_input("Annual Income (₹)", value=600000)
 rent = st.sidebar.slider("Rent", 0, 50000, 15000)
@@ -54,9 +75,10 @@ monthly_income = income / 12
 monthly_expense = rent + food + shopping + entertainment
 monthly_savings = monthly_income - monthly_expense
 savings_rate = (monthly_savings / monthly_income) * 100 if monthly_income else 0
-if monthly_savings < 0:
-    st.error("You are overspending. Reduce expenses.")
 
+# Safety
+if monthly_savings < 0:
+    st.error("⚠️ You are overspending. Reduce expenses.")
 
 # -------------------------
 # POLICY ENGINE
@@ -70,10 +92,10 @@ st.subheader("📊 Financial Overview")
 
 col1, col2, col3, col4 = st.columns(4)
 
-col1.metric("Expense", f"₹{int(monthly_expense):,}")
-col2.metric("Savings", f"₹{int(monthly_savings):,}")
-col3.metric("Savings %", f"{int(savings_rate)}%")
-col4.metric("Risk", policy["risk_profile"])
+col1.metric("💸 Expenses", f"₹{int(monthly_expense):,}")
+col2.metric("💰 Savings", f"₹{int(monthly_savings):,}")
+col3.metric("📈 Savings %", f"{int(savings_rate)}%")
+col4.metric("🧠 Risk", policy["risk_profile"])
 
 # -------------------------
 # CHARTS
@@ -88,37 +110,43 @@ chart_data = pd.DataFrame({
 st.bar_chart(chart_data.set_index("Category"))
 
 fig, ax = plt.subplots()
-ax.pie(chart_data["Amount"], labels=chart_data["Category"], autopct='%1.1f%%')
+ax.pie(
+    chart_data["Amount"],
+    labels=chart_data["Category"],
+    autopct='%1.1f%%',
+    textprops={'color': "white"}
+)
+fig.patch.set_facecolor('#0f172a')
+ax.set_facecolor('#0f172a')
+
 st.pyplot(fig)
 
 # -------------------------
-# AI INSIGHTS
+# INSIGHTS
 # -------------------------
 st.subheader("🧠 Insights")
 
 if savings_rate < 10:
-    st.error("Low savings → high financial risk")
+    st.error("⚠️ Critical: Very low savings.")
 elif savings_rate < 20:
-    st.warning("Moderate savings → improve discipline")
+    st.warning("⚠️ Moderate: Improve savings.")
 else:
-    st.success("Strong financial health")
+    st.success("✅ Strong financial health.")
 
 # -------------------------
-# POLICY DISPLAY
+# POLICY SECTION
 # -------------------------
-st.subheader("🏛️ Policy Intelligence")
+st.subheader("🏛️ Policy Recommendations")
+
+st.info(f"Recommended Tax Regime: {policy['better_regime']}")
 
 col1, col2 = st.columns(2)
+col1.metric("New Tax", f"₹{policy['new_tax']:,}")
+col2.metric("Old Tax", f"₹{policy['old_tax']:,}")
 
-col1.metric("Recommended Regime", policy["better_regime"])
-col2.metric("Risk Profile", policy["risk_profile"])
-
-st.write(f"New Tax: ₹{policy['new_tax']}")
-st.write(f"Old Tax: ₹{policy['old_tax']}")
-
-st.write("### Investment Allocation")
+st.markdown("### 📊 Investment Strategy")
 for k, v in policy["allocation"].items():
-    st.write(f"{k}: {v}")
+    st.write(f"**{k}:** {v}")
 
 # -------------------------
 # WEALTH PROJECTION
@@ -128,7 +156,7 @@ st.subheader("📈 Wealth Projection")
 years = st.slider("Years", 1, 15, 5)
 future_value = max(monthly_savings, 0) * 12 * years * 1.12
 
-st.metric("Projected Wealth", f"₹{int(future_value)}")
+st.metric("Projected Wealth", f"₹{int(future_value):,}")
 
 # -------------------------
 # CSV DOWNLOAD
@@ -138,14 +166,14 @@ st.subheader("📥 Download CSV")
 csv = chart_data.to_csv(index=False).encode("utf-8")
 
 st.download_button(
-    label="Download CSV Report",
-    data=csv,
-    file_name="financial_report.csv",
-    mime="text/csv"
+    "Download CSV Report",
+    csv,
+    "financial_report.csv",
+    "text/csv"
 )
 
 # -------------------------
-# PDF REPORT FUNCTION
+# PDF GENERATION
 # -------------------------
 def generate_pdf(file_path):
     try:
@@ -158,25 +186,21 @@ def generate_pdf(file_path):
 
         doc = SimpleDocTemplate(file_path, pagesize=A4)
 
-        # Styles
         title = ParagraphStyle(name="Title", fontSize=24, alignment=1, spaceAfter=20)
         heading = ParagraphStyle(name="Heading", fontSize=16, spaceAfter=10)
         body = ParagraphStyle(name="Body", fontSize=11, spaceAfter=8)
 
         content = []
 
-        # Cover Page
         content.append(Spacer(1, 250))
-        content.append(Paragraph("AI FINANCE SYSTEM", title))
+        content.append(Paragraph("AI FINANCE REPORT", title))
         content.append(Paragraph("Financial Optimization Report", heading))
         content.append(Paragraph(datetime.now().strftime("%d %B %Y"), body))
         content.append(PageBreak())
 
-        # Summary
         content.append(Paragraph("Executive Summary", heading))
         content.append(Paragraph(f"Savings Rate: {int(savings_rate)}%", body))
 
-        # Table
         table_data = [
             ["Metric", "Value"],
             ["Income", f"₹{int(monthly_income)}"],
@@ -193,7 +217,6 @@ def generate_pdf(file_path):
 
         content.append(table)
 
-        # Chart
         fig, ax = plt.subplots()
         ax.pie(chart_data["Amount"], labels=chart_data["Category"], autopct='%1.1f%%')
         chart_path = "chart.png"
@@ -203,7 +226,6 @@ def generate_pdf(file_path):
         content.append(Paragraph("Expense Distribution", heading))
         content.append(Image(chart_path, width=400, height=300))
 
-        # Policy Section
         content.append(Paragraph("Policy Insights", heading))
         content.append(Paragraph(f"Recommended Regime: {policy['better_regime']}", body))
         content.append(Paragraph(f"Risk Profile: {policy['risk_profile']}", body))
@@ -221,14 +243,20 @@ def generate_pdf(file_path):
 # -------------------------
 st.subheader("📄 Professional Report")
 
-if st.button("Generate PDF Report"):
+if st.button("📄 Generate Professional Report"):
     generate_pdf("report.pdf")
 
     if os.path.exists("report.pdf"):
         with open("report.pdf", "rb") as f:
             st.download_button(
-                "📥 Download PDF",
+                "📥 Download Report",
                 f,
                 "AI_Finance_Report.pdf",
                 "application/pdf"
             )
+
+# -------------------------
+# FOOTER
+# -------------------------
+st.markdown("---")
+st.caption("🚀 Built by Bhargiv | AI Finance Optimizer")
