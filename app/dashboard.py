@@ -415,6 +415,22 @@ def generate_pdf(file_path):
     except Exception as e:
         st.error(f"PDF error: {e}")
 # -------------------------
+# 📄 PDF GENERATION UI (FINAL FIX)
+# -------------------------
+st.subheader("📄 Generate Financial Report")
+
+if st.button("📄 Generate Big4 Report"):
+    generate_pdf("report.pdf")
+
+    if os.path.exists("report.pdf"):
+        with open("report.pdf", "rb") as f:
+            st.download_button(
+                "📥 Download Report",
+                f,
+                "AI_Finance_Report.pdf"
+            )
+
+# -------------------------
 # FOOTER
 # -------------------------
 st.markdown("---")
