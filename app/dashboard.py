@@ -142,189 +142,131 @@ st.write("• Luxury: 28%")
 # -------------------------
 # 💬 SMART CHATBOT (UPGRADED)
 # -------------------------
-st.subheader("💬 AI Financial Advisor Pro")
-
-if "messages" not in st.session_state:
-    st.session_state.messages = []
-
-for msg in st.session_state.messages:
-    with st.chat_message(msg["role"]):
-        st.markdown(msg["content"])
-
-user_input = st.chat_input("Ask anything about your finances...")
-
 def smart_chat(q):
     q = q.lower()
+    nums = re.findall(r'\d+', q)
+    amt = int(nums[0]) if nums else None
+
+    if "milk" in q or "food" in q:
+        return f"🛒 Essential expense. With ₹{int(monthly_savings):,} savings, this is safe."
 
     if "buy" in q:
+        if monthly_savings <= 0:
+            return "❌ You currently have no savings. Avoid purchases."
+
+        if amt:
+            if amt > monthly_savings * 3:
+                return f"⚠️ ₹{amt:,} is too expensive vs your savings ₹{int(monthly_savings):,}."
+            elif amt < monthly_savings:
+                return f"✅ ₹{amt:,} is affordable based on your savings."
+            else:
+                return f"⚠️ This purchase will significantly impact savings."
+
+        return f"📊 Your savings ₹{int(monthly_savings):,}. Evaluate before buying."
+
+    if "house" in q:
         return (
-            f"Based on your monthly savings of ₹{int(monthly_savings):,}, "
-            f"this purchase should be evaluated carefully.\n\n"
-            f"If it exceeds 2–3x your savings, it may impact your financial stability."
+            f"🏡 Major purchase.\n\n"
+            f"Income: ₹{int(monthly_income):,}/month\n"
+            f"Savings: ₹{int(monthly_savings):,}/month\n\n"
+            f"Ensure EMI < 30–40% and emergency fund."
         )
 
     if "invest" in q:
         return (
-            "Diversify investments:\n"
-            "• Equity for growth\n"
-            "• Debt for stability\n"
-            "• Emergency fund first"
+            "📈 Suggested:\n"
+            "• 50% Equity\n"
+            "• 30% Debt\n"
+            "• 20% Emergency fund"
         )
 
     if "tax" in q:
-        return f"Your estimated tax is ₹{tax_amount:,} under current structure."
+        return f"🏛️ Your estimated tax is ₹{tax_amount:,}"
 
-    return "Ask about buying, saving, investing, or tax."
-
-if user_input:
-    st.session_state.messages.append({"role":"user","content":user_input})
-
-    with st.chat_message("user"):
-        st.markdown(user_input)
-
-    reply = smart_chat(user_input)
-
-    st.session_state.messages.append({"role":"assistant","content":reply})
-
-    with st.chat_message("assistant"):
-        st.markdown(reply)
-
+    return "🤖 Ask about buying, investing, tax, or savings."
 # -------------------------
 def generate_pdf(file_path):
     try:
         from reportlab.platypus import (
-            SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, PageBreak
+            SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, Image, PageBreak
         )
         from reportlab.lib import colors
         from reportlab.lib.styles import ParagraphStyle
         from reportlab.lib.pagesizes import A4
+        import matplotlib.pyplot as plt
 
         doc = SimpleDocTemplate(file_path, pagesize=A4)
 
-        # -------------------------
-        # STYLES
-        # -------------------------
         title = ParagraphStyle(name="Title", fontSize=28, alignment=1, spaceAfter=30)
-        subtitle = ParagraphStyle(name="Subtitle", fontSize=14, alignment=1, spaceAfter=20)
         heading = ParagraphStyle(name="Heading", fontSize=18, spaceAfter=12)
-        body = ParagraphStyle(name="Body", fontSize=12, spaceAfter=10)
+        body = ParagraphStyle(name="Body", fontSize=11, spaceAfter=10)
 
         content = []
 
-        # -------------------------
-        # COVER PAGE
-        # -------------------------
+        # COVER
         content.append(Spacer(1, 200))
         content.append(Paragraph("AI FINANCE REPORT", title))
-        content.append(Paragraph("Financial Analysis & Advisory", subtitle))
         content.append(Paragraph(datetime.now().strftime("%d %B %Y"), body))
         content.append(PageBreak())
 
-        # -------------------------
-        # EXECUTIVE SUMMARY
-        # -------------------------
+        # SUMMARY
         content.append(Paragraph("Executive Summary", heading))
-
         content.append(Paragraph(
-            f"This report analyzes your financial position based on income, expenses, and savings behavior.",
+            f"Income ₹{int(monthly_income):,}, Expenses ₹{int(monthly_expense):,}, Savings ₹{int(monthly_savings):,}.",
             body
         ))
 
-        content.append(Paragraph(
-            f"Your monthly income is <b>₹{int(monthly_income):,}</b> and expenses are "
-            f"<b>₹{int(monthly_expense):,}</b>, resulting in savings of "
-            f"<b>₹{int(monthly_savings):,}</b>.",
-            body
-        ))
-
-        content.append(Paragraph(
-            f"Your savings rate is <b>{int(savings_rate)}%</b>, indicating "
-            f"{'strong' if savings_rate > 20 else 'moderate' if savings_rate > 10 else 'low'} financial health.",
-            body
-        ))
-
-        # -------------------------
-        # FINANCIAL BREAKDOWN TABLE
-        # -------------------------
-        content.append(Spacer(1, 20))
-        content.append(Paragraph("Financial Breakdown", heading))
-
+        # TABLE
         table_data = [
-            ["Metric", "Amount (₹)"],
-            ["Monthly Income", f"{int(monthly_income):,}"],
-            ["Monthly Expenses", f"{int(monthly_expense):,}"],
-            ["Monthly Savings", f"{int(monthly_savings):,}"],
-            ["Annual Tax", f"{tax_amount:,}"]
+            ["Metric", "Value"],
+            ["Income", f"₹{int(monthly_income):,}"],
+            ["Expenses", f"₹{int(monthly_expense):,}"],
+            ["Savings", f"₹{int(monthly_savings):,}"],
+            ["Tax", f"₹{tax_amount:,}"]
         ]
 
-        table = Table(table_data, colWidths=[250, 150])
-
+        table = Table(table_data)
         table.setStyle(TableStyle([
-            ("BACKGROUND", (0,0), (-1,0), colors.HexColor("#111827")),
+            ("BACKGROUND", (0,0), (-1,0), colors.black),
             ("TEXTCOLOR", (0,0), (-1,0), colors.white),
-            ("GRID", (0,0), (-1,-1), 0.5, colors.grey),
-            ("FONTNAME", (0,0), (-1,0), "Helvetica-Bold")
+            ("GRID", (0,0), (-1,-1), 0.5, colors.grey)
         ]))
 
         content.append(table)
 
-        # -------------------------
-        # EXPENSE ANALYSIS
-        # -------------------------
+        # CHART
+        fig, ax = plt.subplots()
+        ax.pie(chart_data["Amount"], labels=chart_data["Category"], autopct='%1.1f%%')
+        chart_path = "chart.png"
+        plt.savefig(chart_path)
+        plt.close()
+
         content.append(Spacer(1, 20))
-        content.append(Paragraph("Expense Analysis", heading))
+        content.append(Paragraph("Expense Distribution", heading))
+        content.append(Image(chart_path, width=400, height=300))
 
-        content.append(Paragraph(
-            f"Your total monthly expenses are ₹{int(monthly_expense):,}. "
-            f"Major spending categories include rent, food, and discretionary expenses.",
-            body
-        ))
-
-        # -------------------------
-        # TAX ANALYSIS
-        # -------------------------
-        content.append(Spacer(1, 20))
-        content.append(Paragraph("Tax Analysis", heading))
-
-        content.append(Paragraph(
-            f"Based on your annual income, your estimated tax liability is "
-            f"<b>₹{tax_amount:,}</b> under the current tax structure.",
-            body
-        ))
-
-        content.append(Paragraph(
-            "Consider tax-saving investments and deductions to reduce liability.",
-            body
-        ))
-
-        # -------------------------
-        # RECOMMENDATIONS
-        # -------------------------
+        # RECOMMENDATION
         content.append(Spacer(1, 20))
         content.append(Paragraph("Recommendations", heading))
 
         if savings_rate < 20:
-            content.append(Paragraph(
-                "• Increase savings by reducing discretionary expenses.\n"
-                "• Track monthly spending more closely.\n"
-                "• Build an emergency fund of at least 6 months.",
-                body
-            ))
+            content.append(Paragraph("Increase savings and reduce expenses.", body))
         else:
-            content.append(Paragraph(
-                "• Maintain current savings discipline.\n"
-                "• Increase investment allocation.\n"
-                "• Diversify portfolio for long-term growth.",
-                body
-            ))
+            content.append(Paragraph("Maintain discipline and invest.", body))
 
-        # -------------------------
-        # BUILD PDF
-        # -------------------------
         doc.build(content)
 
     except Exception as e:
         st.error(f"PDF error: {e}")
+
+        st.subheader("📄 Generate Report")
+
+if st.button("📄 Generate Big4 Report"):
+    generate_pdf("report.pdf")
+
+    if os.path.exists("report.pdf"):
+        with open("report.pdf", "rb") as f:
+            st.download_button("📥 Download Report", f, "AI_Finance_Report.pdf")
 # -------------------------
 # FOOTER
 # -------------------------
