@@ -43,7 +43,8 @@ The system includes a modular policy engine that simulates:
 - Investment allocation strategy  
 
 ---
-
+App direct link 
+https://ai-finance-optimizer-j4ya3wg7byawohwneevksn.streamlit.app/
 ## ▶️ Run Locally
 
 ```bash
@@ -51,3 +52,4 @@ git clone https://github.com/YOUR_USERNAME/ai-finance-optimizer.git
 cd ai-finance-optimizer
 pip install -r requirements.txt
 streamlit run app/dashboard.py
+
