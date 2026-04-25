@@ -1,4 +1,4 @@
-import sys, os
+import sys, os, re
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 import streamlit as st
@@ -50,16 +50,12 @@ hr { border: 1px solid #334155; }
 # HEADER
 # -------------------------
 st.title("💰 AI Financial Optimizer")
-
-st.markdown("""
-### 💡 Smart Financial Advisor  
-Analyze income, optimize taxes, and get investment strategies instantly.
-""")
+st.markdown("### 💡 Smart Financial Advisor — Make smarter decisions instantly")
 
 # -------------------------
 # SIDEBAR INPUT
 # -------------------------
-st.sidebar.header("⚙️ Inputs")
+st.sidebar.header("⚙️ Financial Inputs")
 
 income = st.sidebar.number_input("Annual Income (₹)", value=600000)
 rent = st.sidebar.slider("Rent", 0, 50000, 15000)
@@ -88,12 +84,11 @@ policy = apply_policies(income, monthly_savings)
 # -------------------------
 st.subheader("📊 Financial Overview")
 
-col1, col2, col3, col4 = st.columns(4)
-
-col1.metric("💸 Expenses", f"₹{int(monthly_expense):,}")
-col2.metric("💰 Savings", f"₹{int(monthly_savings):,}")
-col3.metric("📈 Savings %", f"{int(savings_rate)}%")
-col4.metric("🧠 Risk", policy["risk_profile"])
+c1, c2, c3, c4 = st.columns(4)
+c1.metric("💸 Expenses", f"₹{int(monthly_expense):,}")
+c2.metric("💰 Savings", f"₹{int(monthly_savings):,}")
+c3.metric("📈 Savings %", f"{int(savings_rate)}%")
+c4.metric("🧠 Risk", policy["risk_profile"])
 
 # -------------------------
 # CHARTS
@@ -111,7 +106,6 @@ fig, ax = plt.subplots()
 ax.pie(chart_data["Amount"], labels=chart_data["Category"], autopct='%1.1f%%', textprops={'color': "white"})
 fig.patch.set_facecolor('#0f172a')
 ax.set_facecolor('#0f172a')
-
 st.pyplot(fig)
 
 # -------------------------
@@ -127,98 +121,71 @@ else:
     st.success("✅ Strong financial health.")
 
 # -------------------------
-# POLICY SECTION
+# POLICY
 # -------------------------
 st.subheader("🏛️ Policy Recommendations")
 
 st.info(f"Recommended Tax Regime: {policy['better_regime']}")
 
-col1, col2 = st.columns(2)
-col1.metric("New Tax", f"₹{policy['new_tax']:,}")
-col2.metric("Old Tax", f"₹{policy['old_tax']:,}")
+c1, c2 = st.columns(2)
+c1.metric("New Tax", f"₹{policy['new_tax']:,}")
+c2.metric("Old Tax", f"₹{policy['old_tax']:,}")
 
 st.markdown("### 📊 Investment Strategy")
 for k, v in policy["allocation"].items():
     st.write(f"**{k}:** {v}")
 
 # -------------------------
-# WEALTH PROJECTION
+# WEALTH
 # -------------------------
 st.subheader("📈 Wealth Projection")
 
 years = st.slider("Years", 1, 15, 5)
 future_value = max(monthly_savings, 0) * 12 * years * 1.12
-
 st.metric("Projected Wealth", f"₹{int(future_value):,}")
 
 # -------------------------
 # CSV DOWNLOAD
 # -------------------------
-st.subheader("📥 Download CSV")
-
+st.subheader("📥 Download Data")
 csv = chart_data.to_csv(index=False).encode("utf-8")
-
-st.download_button("Download CSV Report", csv, "financial_report.csv", "text/csv")
+st.download_button("Download CSV Report", csv, "financial_report.csv")
 
 # -------------------------
-# PDF GENERATION
+# PDF REPORT
 # -------------------------
 def generate_pdf(file_path):
     try:
-        from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, Image, PageBreak
-        from reportlab.lib import colors
+        from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer
         from reportlab.lib.styles import ParagraphStyle
         from reportlab.lib.pagesizes import A4
 
         doc = SimpleDocTemplate(file_path, pagesize=A4)
 
-        title = ParagraphStyle(name="Title", fontSize=24, alignment=1)
-        heading = ParagraphStyle(name="Heading", fontSize=16)
-        body = ParagraphStyle(name="Body", fontSize=11)
+        title = ParagraphStyle(name="Title", fontSize=24)
+        body = ParagraphStyle(name="Body", fontSize=12)
 
         content = []
-
         content.append(Spacer(1, 200))
         content.append(Paragraph("AI FINANCE REPORT", title))
-        content.append(PageBreak())
-
-        content.append(Paragraph("Summary", heading))
+        content.append(Spacer(1, 20))
         content.append(Paragraph(f"Savings Rate: {int(savings_rate)}%", body))
-
-        table = Table([
-            ["Metric", "Value"],
-            ["Income", f"₹{int(monthly_income)}"],
-            ["Expense", f"₹{int(monthly_expense)}"],
-            ["Savings", f"₹{int(monthly_savings)}"]
-        ])
-
-        table.setStyle(TableStyle([
-            ("BACKGROUND", (0,0), (-1,0), colors.black),
-            ("TEXTCOLOR", (0,0), (-1,0), colors.white),
-            ("GRID", (0,0), (-1,-1), 0.5, colors.grey)
-        ]))
-
-        content.append(table)
 
         doc.build(content)
 
     except Exception as e:
         st.error(f"PDF error: {e}")
 
-# -------------------------
-# PDF BUTTON
-# -------------------------
 st.subheader("📄 Professional Report")
 
-if st.button("Generate PDF"):
+if st.button("Generate PDF Report"):
     generate_pdf("report.pdf")
-
     if os.path.exists("report.pdf"):
         with open("report.pdf", "rb") as f:
-            st.download_button("Download Report", f, "AI_Finance_Report.pdf")
+            st.download_button("Download PDF", f, "finance_report.pdf")
 
 # -------------------------
-# 💬 CHATBOT UI
+# 💬 CHATBOT (FINAL FIXED)
 # -------------------------
 st.subheader("💬 AI Financial Advisor")
 
@@ -229,46 +196,64 @@ for msg in st.session_state.messages:
     with st.chat_message(msg["role"]):
         st.markdown(msg["content"])
 
-user_input = st.chat_input("Ask about your finances...")
+user_input = st.chat_input("Ask: Can I buy iPhone for 80000?")
+
+def extract_amount(text):
+    nums = re.findall(r'\d+', text.replace(',', ''))
+    return int(nums[0]) if nums else None
 
 def financial_chat(query):
-    query = query.lower()
+    q = query.lower()
+    amt = extract_amount(q)
 
-    if "house" in query:
-        if monthly_savings <= 0:
-            return "❌ Not possible right now."
-        elif monthly_savings < 20000:
-            return "⚠️ Buying a house is risky now."
-        else:
-            return "🏡 You can consider buying a house."
+    # 🛒 NECESSITIES FIRST
+    if any(x in q for x in ["milk","food","groceries","vegetables","medicine"]):
+        return f"🛒 This is a basic necessity. ₹{amt if amt else ''} is fine to spend."
 
-    elif "buy" in query or "afford" in query:
-        if monthly_savings > 20000:
-            return "✅ You can afford it."
-        else:
-            return "❌ Not recommended."
+    # 📱 MEDIUM
+    if any(x in q for x in ["phone","iphone","laptop","bike"]):
+        if amt:
+            if amt > monthly_savings * 3:
+                return f"⚠️ ₹{amt} is too high vs your savings."
+            elif amt < monthly_savings:
+                return f"✅ ₹{amt} is affordable."
+            else:
+                return "⚠️ Manageable but impacts savings."
+        return "📱 Depends on your savings."
 
-    elif "invest" in query:
+    # 🏡 BIG
+    if any(x in q for x in ["house","home","car"]):
+        if amt:
+            if amt > monthly_income * 50:
+                return f"❌ ₹{amt} is too large vs your income."
+            elif amt > monthly_income * 20:
+                return f"⚠️ ₹{amt} needs EMI planning."
+            else:
+                return "🏡 Possible with planning."
+        return "🏡 Plan finances carefully."
+
+    # 📈 OTHER
+    if "invest" in q:
         return f"📈 Follow {policy['risk_profile']} strategy."
+    if "save" in q:
+        return "💡 Save at least 20% income."
+    if "tax" in q:
+        return f"🏛️ {policy['better_regime']} is better."
 
-    elif "save" in query:
-        return "💡 Try saving at least 20%."
-
-    else:
-        return "🤖 Ask about buying, saving, investing."
+    return "🤖 Ask about buying, investing, tax, or savings."
 
 if user_input:
-    st.session_state.messages.append({"role": "user", "content": user_input})
+    st.session_state.messages.append({"role":"user","content":user_input})
 
     with st.chat_message("user"):
         st.markdown(user_input)
 
-    response = financial_chat(user_input)
+    reply = financial_chat(user_input)
 
-    st.session_state.messages.append({"role": "assistant", "content": response})
+    st.session_state.messages.append({"role":"assistant","content":reply})
 
     with st.chat_message("assistant"):
-        st.markdown(response)
+        st.markdown(reply)
 
 # -------------------------
 # FOOTER
