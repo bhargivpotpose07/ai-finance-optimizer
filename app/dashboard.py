@@ -75,13 +75,6 @@ col2.metric("Savings", f"₹{int(monthly_savings):,}")
 col3.metric("Savings %", f"{int(savings_rate)}%")
 col4.metric("Risk", policy["risk_profile"])
 
-col1, col2, col3, col4 = st.columns(4)
-
-col1.metric("Expense", f"₹{monthly_expense}")
-col2.metric("Savings", f"₹{int(monthly_savings)}")
-col3.metric("Savings %", f"{int(savings_rate)}%")
-col4.metric("Risk", policy["risk_profile"])
-
 # -------------------------
 # CHARTS
 # -------------------------
