@@ -250,6 +250,7 @@ def smart_chat(q):
         "• Tax advice\n\n"
         "👉 Try: 'Can I buy iPhone for 80000?'"
     )
+    
 # -------------------------
 def generate_pdf(file_path):
     try:
