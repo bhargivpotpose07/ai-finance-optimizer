@@ -255,19 +255,26 @@ if st.button("📄 Generate Professional Report"):
                 "application/pdf"
             )
 
-# -------------------------
-# 💬 AI FINANCIAL ADVISOR
-# -------------------------
-st.subheader("💬 AI Financial Advisor")
-
-user_query = st.text_input("Ask anything about your finances")
-
 def financial_chat(query):
     query = query.lower()
 
-    if "afford" in query:
+    # -------------------------
+    # HOUSE / BIG PURCHASE
+    # -------------------------
+    if "house" in query or "home" in query:
         if monthly_savings <= 0:
-            return "❌ You should not buy this. You are overspending already."
+            return "❌ Not possible right now. You are not saving anything."
+        elif monthly_savings < 20000:
+            return "⚠️ Buying a house now is risky. Increase savings and build a down payment first."
+        else:
+            return "🏡 You may consider buying a house, but plan for EMI and emergency fund."
+
+    # -------------------------
+    # AFFORDABILITY
+    # -------------------------
+    elif "afford" in query or "buy" in query:
+        if monthly_savings <= 0:
+            return "❌ You should not buy this. You are overspending."
         elif monthly_savings > 20000:
             return "✅ You can afford it comfortably."
         elif monthly_savings > 10000:
@@ -275,32 +282,46 @@ def financial_chat(query):
         else:
             return "❌ Not recommended. Your savings are low."
 
+    # -------------------------
+    # INVESTMENT
+    # -------------------------
     elif "invest" in query:
         if policy["risk_profile"] == "High Growth":
-            return "📈 Invest more in equity-based assets."
+            return "📈 Invest in equity mutual funds or stocks for higher returns."
         elif policy["risk_profile"] == "Balanced":
-            return "⚖️ Maintain a mix of equity and debt."
+            return "⚖️ Maintain a mix of equity and debt investments."
         else:
-            return "🛡️ Focus on safe investments and savings first."
+            return "🛡️ Focus on fixed deposits, bonds, and safe options."
 
-    elif "spending" in query:
+    # -------------------------
+    # SPENDING
+    # -------------------------
+    elif "spend" in query or "expense" in query:
         if monthly_expense > monthly_income * 0.7:
-            return "⚠️ Your spending is too high."
+            return "⚠️ Your spending is too high. Reduce unnecessary expenses."
         else:
             return "✅ Your spending is under control."
 
-    elif "save" in query:
+    # -------------------------
+    # SAVINGS
+    # -------------------------
+    elif "save" in query or "saving" in query:
         if savings_rate < 20:
-            return "💡 Try to increase savings to at least 20%."
+            return "💡 Try to save at least 20% of your income."
         else:
-            return "✅ Your savings habit is good."
+            return "✅ Your savings habit is strong."
 
+    # -------------------------
+    # TAX
+    # -------------------------
+    elif "tax" in query:
+        return f"🏛️ You should follow the {policy['better_regime']} tax regime to save more tax."
+
+    # -------------------------
+    # DEFAULT
+    # -------------------------
     else:
-        return "🤖 Ask about affordability, investing, savings, or spending."
-
-if st.button("Ask AI"):
-    response = financial_chat(user_query)
-    st.success(response)
+        return "🤖 Ask things like: 'Can I buy a car?', 'Should I invest?', 'Is my spending high?'"
 # -------------------------
 # FOOTER
 # -------------------------
