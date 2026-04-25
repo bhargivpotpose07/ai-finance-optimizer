@@ -14,7 +14,7 @@ from utils.policy_engine import apply_policies
 st.set_page_config(page_title="AI Finance Optimizer", layout="wide")
 
 # -------------------------
-# PROFESSIONAL UI THEME
+# UI STYLE
 # -------------------------
 st.markdown("""
 <style>
@@ -42,7 +42,6 @@ section[data-testid="stSidebar"] {
 }
 
 p, span { color: #e2e8f0; }
-
 hr { border: 1px solid #334155; }
 </style>
 """, unsafe_allow_html=True)
@@ -76,7 +75,6 @@ monthly_expense = rent + food + shopping + entertainment
 monthly_savings = monthly_income - monthly_expense
 savings_rate = (monthly_savings / monthly_income) * 100 if monthly_income else 0
 
-# Safety
 if monthly_savings < 0:
     st.error("⚠️ You are overspending. Reduce expenses.")
 
@@ -110,12 +108,7 @@ chart_data = pd.DataFrame({
 st.bar_chart(chart_data.set_index("Category"))
 
 fig, ax = plt.subplots()
-ax.pie(
-    chart_data["Amount"],
-    labels=chart_data["Category"],
-    autopct='%1.1f%%',
-    textprops={'color': "white"}
-)
+ax.pie(chart_data["Amount"], labels=chart_data["Category"], autopct='%1.1f%%', textprops={'color': "white"})
 fig.patch.set_facecolor('#0f172a')
 ax.set_facecolor('#0f172a')
 
@@ -165,50 +158,40 @@ st.subheader("📥 Download CSV")
 
 csv = chart_data.to_csv(index=False).encode("utf-8")
 
-st.download_button(
-    "Download CSV Report",
-    csv,
-    "financial_report.csv",
-    "text/csv"
-)
+st.download_button("Download CSV Report", csv, "financial_report.csv", "text/csv")
 
 # -------------------------
 # PDF GENERATION
 # -------------------------
 def generate_pdf(file_path):
     try:
-        from reportlab.platypus import (
-            SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, Image, PageBreak
-        )
+        from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, Image, PageBreak
         from reportlab.lib import colors
         from reportlab.lib.styles import ParagraphStyle
         from reportlab.lib.pagesizes import A4
 
         doc = SimpleDocTemplate(file_path, pagesize=A4)
 
-        title = ParagraphStyle(name="Title", fontSize=24, alignment=1, spaceAfter=20)
-        heading = ParagraphStyle(name="Heading", fontSize=16, spaceAfter=10)
-        body = ParagraphStyle(name="Body", fontSize=11, spaceAfter=8)
+        title = ParagraphStyle(name="Title", fontSize=24, alignment=1)
+        heading = ParagraphStyle(name="Heading", fontSize=16)
+        body = ParagraphStyle(name="Body", fontSize=11)
 
         content = []
 
-        content.append(Spacer(1, 250))
+        content.append(Spacer(1, 200))
         content.append(Paragraph("AI FINANCE REPORT", title))
-        content.append(Paragraph("Financial Optimization Report", heading))
-        content.append(Paragraph(datetime.now().strftime("%d %B %Y"), body))
         content.append(PageBreak())
 
-        content.append(Paragraph("Executive Summary", heading))
+        content.append(Paragraph("Summary", heading))
         content.append(Paragraph(f"Savings Rate: {int(savings_rate)}%", body))
 
-        table_data = [
+        table = Table([
             ["Metric", "Value"],
             ["Income", f"₹{int(monthly_income)}"],
             ["Expense", f"₹{int(monthly_expense)}"],
             ["Savings", f"₹{int(monthly_savings)}"]
-        ]
+        ])
 
-        table = Table(table_data)
         table.setStyle(TableStyle([
             ("BACKGROUND", (0,0), (-1,0), colors.black),
             ("TEXTCOLOR", (0,0), (-1,0), colors.white),
@@ -216,22 +199,6 @@ def generate_pdf(file_path):
         ]))
 
         content.append(table)
-
-        fig, ax = plt.subplots()
-        ax.pie(chart_data["Amount"], labels=chart_data["Category"], autopct='%1.1f%%')
-        chart_path = "chart.png"
-        plt.savefig(chart_path)
-        plt.close()
-
-        content.append(Paragraph("Expense Distribution", heading))
-        content.append(Image(chart_path, width=400, height=300))
-
-        content.append(Paragraph("Policy Insights", heading))
-        content.append(Paragraph(f"Recommended Regime: {policy['better_regime']}", body))
-        content.append(Paragraph(f"Risk Profile: {policy['risk_profile']}", body))
-
-        for k, v in policy["allocation"].items():
-            content.append(Paragraph(f"{k}: {v}", body))
 
         doc.build(content)
 
@@ -243,85 +210,66 @@ def generate_pdf(file_path):
 # -------------------------
 st.subheader("📄 Professional Report")
 
-if st.button("📄 Generate Professional Report"):
+if st.button("Generate PDF"):
     generate_pdf("report.pdf")
 
     if os.path.exists("report.pdf"):
         with open("report.pdf", "rb") as f:
-            st.download_button(
-                "📥 Download Report",
-                f,
-                "AI_Finance_Report.pdf",
-                "application/pdf"
-            )
+            st.download_button("Download Report", f, "AI_Finance_Report.pdf")
+
+# -------------------------
+# 💬 CHATBOT UI
+# -------------------------
+st.subheader("💬 AI Financial Advisor")
+
+if "messages" not in st.session_state:
+    st.session_state.messages = []
+
+for msg in st.session_state.messages:
+    with st.chat_message(msg["role"]):
+        st.markdown(msg["content"])
+
+user_input = st.chat_input("Ask about your finances...")
 
 def financial_chat(query):
     query = query.lower()
 
-    # -------------------------
-    # HOUSE / BIG PURCHASE
-    # -------------------------
-    if "house" in query or "home" in query:
+    if "house" in query:
         if monthly_savings <= 0:
-            return "❌ Not possible right now. You are not saving anything."
+            return "❌ Not possible right now."
         elif monthly_savings < 20000:
-            return "⚠️ Buying a house now is risky. Increase savings and build a down payment first."
+            return "⚠️ Buying a house is risky now."
         else:
-            return "🏡 You may consider buying a house, but plan for EMI and emergency fund."
+            return "🏡 You can consider buying a house."
 
-    # -------------------------
-    # AFFORDABILITY
-    # -------------------------
-    elif "afford" in query or "buy" in query:
-        if monthly_savings <= 0:
-            return "❌ You should not buy this. You are overspending."
-        elif monthly_savings > 20000:
-            return "✅ You can afford it comfortably."
-        elif monthly_savings > 10000:
-            return "⚠️ You can afford it, but be cautious."
+    elif "buy" in query or "afford" in query:
+        if monthly_savings > 20000:
+            return "✅ You can afford it."
         else:
-            return "❌ Not recommended. Your savings are low."
+            return "❌ Not recommended."
 
-    # -------------------------
-    # INVESTMENT
-    # -------------------------
     elif "invest" in query:
-        if policy["risk_profile"] == "High Growth":
-            return "📈 Invest in equity mutual funds or stocks for higher returns."
-        elif policy["risk_profile"] == "Balanced":
-            return "⚖️ Maintain a mix of equity and debt investments."
-        else:
-            return "🛡️ Focus on fixed deposits, bonds, and safe options."
+        return f"📈 Follow {policy['risk_profile']} strategy."
 
-    # -------------------------
-    # SPENDING
-    # -------------------------
-    elif "spend" in query or "expense" in query:
-        if monthly_expense > monthly_income * 0.7:
-            return "⚠️ Your spending is too high. Reduce unnecessary expenses."
-        else:
-            return "✅ Your spending is under control."
+    elif "save" in query:
+        return "💡 Try saving at least 20%."
 
-    # -------------------------
-    # SAVINGS
-    # -------------------------
-    elif "save" in query or "saving" in query:
-        if savings_rate < 20:
-            return "💡 Try to save at least 20% of your income."
-        else:
-            return "✅ Your savings habit is strong."
-
-    # -------------------------
-    # TAX
-    # -------------------------
-    elif "tax" in query:
-        return f"🏛️ You should follow the {policy['better_regime']} tax regime to save more tax."
-
-    # -------------------------
-    # DEFAULT
-    # -------------------------
     else:
-        return "🤖 Ask things like: 'Can I buy a car?', 'Should I invest?', 'Is my spending high?'"
+        return "🤖 Ask about buying, saving, investing."
+
+if user_input:
+    st.session_state.messages.append({"role": "user", "content": user_input})
+
+    with st.chat_message("user"):
+        st.markdown(user_input)
+
+    response = financial_chat(user_input)
+
+    st.session_state.messages.append({"role": "assistant", "content": response})
+
+    with st.chat_message("assistant"):
+        st.markdown(response)
+
 # -------------------------
 # FOOTER
 # -------------------------
