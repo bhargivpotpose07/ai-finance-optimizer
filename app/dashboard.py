@@ -19,30 +19,12 @@ st.set_page_config(page_title="AI Finance Optimizer", layout="wide")
 st.markdown("""
 <style>
 body { background-color: #0f172a; }
-h1 { color: #f8fafc; font-weight: 700; }
-h2, h3 { color: #cbd5f5; }
-
+h1 { color: #f8fafc; }
 [data-testid="stMetric"] {
     background-color: #1e293b;
-    border-radius: 12px;
-    padding: 15px;
-    text-align: center;
-}
-
-.stButton>button {
-    background-color: #3b82f6;
-    color: white;
     border-radius: 10px;
-    padding: 10px;
-    font-weight: bold;
+    padding: 15px;
 }
-
-section[data-testid="stSidebar"] {
-    background-color: #020617;
-}
-
-p, span { color: #e2e8f0; }
-hr { border: 1px solid #334155; }
 </style>
 """, unsafe_allow_html=True)
 
@@ -50,13 +32,11 @@ hr { border: 1px solid #334155; }
 # HEADER
 # -------------------------
 st.title("💰 AI Financial Optimizer")
-st.markdown("### 💡 Smart Financial Advisor — Make smarter decisions instantly")
 
 # -------------------------
 # SIDEBAR INPUT
 # -------------------------
-st.sidebar.header("⚙️ Financial Inputs")
-
+st.sidebar.caption("💡 Income is annual, expenses are monthly")
 income = st.sidebar.number_input("Annual Income (₹)", value=600000)
 rent = st.sidebar.slider("Rent", 0, 50000, 15000)
 food = st.sidebar.slider("Food", 0, 20000, 6000)
@@ -71,9 +51,6 @@ monthly_expense = rent + food + shopping + entertainment
 monthly_savings = monthly_income - monthly_expense
 savings_rate = (monthly_savings / monthly_income) * 100 if monthly_income else 0
 
-if monthly_savings < 0:
-    st.error("⚠️ You are overspending. Reduce expenses.")
-
 # -------------------------
 # POLICY ENGINE
 # -------------------------
@@ -82,19 +59,15 @@ policy = apply_policies(income, monthly_savings)
 # -------------------------
 # METRICS
 # -------------------------
-st.subheader("📊 Financial Overview")
-
 c1, c2, c3, c4 = st.columns(4)
-c1.metric("💸 Expenses", f"₹{int(monthly_expense):,}")
-c2.metric("💰 Savings", f"₹{int(monthly_savings):,}")
-c3.metric("📈 Savings %", f"{int(savings_rate)}%")
-c4.metric("🧠 Risk", policy["risk_profile"])
+c1.metric("Expenses", f"₹{int(monthly_expense):,}")
+c2.metric("Savings", f"₹{int(monthly_savings):,}")
+c3.metric("Savings %", f"{int(savings_rate)}%")
+c4.metric("Risk", policy["risk_profile"])
 
 # -------------------------
-# CHARTS
+# CHART
 # -------------------------
-st.subheader("📈 Expense Breakdown")
-
 chart_data = pd.DataFrame({
     "Category": ["Rent", "Food", "Shopping", "Entertainment"],
     "Amount": [rent, food, shopping, entertainment]
@@ -102,106 +75,41 @@ chart_data = pd.DataFrame({
 
 st.bar_chart(chart_data.set_index("Category"))
 
-fig, ax = plt.subplots()
-ax.pie(chart_data["Amount"], labels=chart_data["Category"], autopct='%1.1f%%', textprops={'color': "white"})
-fig.patch.set_facecolor('#0f172a')
-ax.set_facecolor('#0f172a')
-st.pyplot(fig)
-
 # -------------------------
-# INSIGHTS
-# -------------------------
-st.subheader("🧠 Insights")
-
-if savings_rate < 10:
-    st.error("⚠️ Critical: Very low savings.")
-elif savings_rate < 20:
-    st.warning("⚠️ Moderate: Improve savings.")
-else:
-    st.success("✅ Strong financial health.")
-
-# -------------------------
-# POLICY
-# -------------------------
-st.subheader("🏛️ Policy Recommendations")
-
-st.info(f"Recommended Tax Regime: {policy['better_regime']}")
-
-c1, c2 = st.columns(2)
-c1.metric("New Tax", f"₹{policy['new_tax']:,}")
-c2.metric("Old Tax", f"₹{policy['old_tax']:,}")
-
-st.markdown("### 📊 Investment Strategy")
-for k, v in policy["allocation"].items():
-    st.write(f"**{k}:** {v}")
-
-# -------------------------
-# WEALTH PROJECTION
-# -------------------------
-st.subheader("📈 Wealth Projection")
-
-years = st.slider("Years", 1, 15, 5)
-future_value = max(monthly_savings, 0) * 12 * years * 1.12
-st.metric("Projected Wealth", f"₹{int(future_value):,}")
-
-# -------------------------
-# CSV DOWNLOAD
-# -------------------------
-st.subheader("📥 Download Data")
-csv = chart_data.to_csv(index=False).encode("utf-8")
-st.download_button("Download CSV Report", csv, "financial_report.csv")
-
+# PDF FUNCTION (FIXED)
 # -------------------------
 def generate_pdf(file_path):
     try:
-        from reportlab.platypus import (
-            SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, Image, PageBreak
-        )
-        from reportlab.lib import colors
+        from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer
         from reportlab.lib.styles import ParagraphStyle
         from reportlab.lib.pagesizes import A4
 
         doc = SimpleDocTemplate(file_path, pagesize=A4)
 
-        title = ParagraphStyle(name="Title", fontSize=28, alignment=1, spaceAfter=30)
-        subtitle = ParagraphStyle(name="Subtitle", fontSize=16, alignment=1, spaceAfter=20)
-        heading = ParagraphStyle(name="Heading", fontSize=18, spaceAfter=12)
-        body = ParagraphStyle(name="Body", fontSize=11, spaceAfter=10)
+        title = ParagraphStyle(name="Title", fontSize=20)
+        body = ParagraphStyle(name="Body", fontSize=12)
 
         content = []
 
-        # COVER PAGE
         content.append(Spacer(1, 200))
         content.append(Paragraph("AI FINANCE REPORT", title))
-        content.append(Paragraph("Financial Optimization System", subtitle))
-        content.append(Paragraph(datetime.now().strftime("%d %B %Y"), body))
-        content.append(PageBreak())
-
-        # SUMMARY
-        content.append(Paragraph("Executive Summary", heading))
+        content.append(Spacer(1, 20))
         content.append(Paragraph(f"Savings Rate: {int(savings_rate)}%", body))
-
-        # TABLE
-        table_data = [
-            ["Metric", "Value"],
-            ["Income", f"₹{int(monthly_income):,}"],
-            ["Expense", f"₹{int(monthly_expense):,}"],
-            ["Savings", f"₹{int(monthly_savings):,}"]
-        ]
-
-        table = Table(table_data)
-        table.setStyle(TableStyle([
-            ("BACKGROUND", (0,0), (-1,0), colors.black),
-            ("TEXTCOLOR", (0,0), (-1,0), colors.white),
-            ("GRID", (0,0), (-1,-1), 0.5, colors.grey)
-        ]))
-
-        content.append(table)
 
         doc.build(content)
 
     except Exception as e:
         st.error(f"PDF error: {e}")
+
+# -------------------------
+# PDF BUTTON
+# -------------------------
+if st.button("Generate PDF"):
+    generate_pdf("report.pdf")
+    if os.path.exists("report.pdf"):
+        with open("report.pdf", "rb") as f:
+            st.download_button("Download PDF", f, "report.pdf")
+
 # -------------------------
 # 💬 SMART CHATBOT (FINAL)
 # -------------------------
@@ -214,7 +122,7 @@ for msg in st.session_state.messages:
     with st.chat_message(msg["role"]):
         st.markdown(msg["content"])
 
-user_input = st.chat_input("Ask: Can I buy iPhone for 80000?")
+user_input = st.chat_input("Ask something like: Can I buy iPhone for 80000?")
 
 def extract_amount(text):
     nums = re.findall(r'\d+', text.replace(',', ''))
@@ -229,46 +137,45 @@ def financial_chat(query):
 
     # NECESSITIES
     if any(x in q for x in ["milk","food","groceries","vegetables","medicine"]):
-        return f"🛒 This is essential. Your savings: ₹{int(savings):,}. This will not impact your finances."
+        return f"🛒 Essential expense. Your savings ₹{int(savings):,} — no issue buying this."
 
-    # MEDIUM PURCHASE
+    # MEDIUM
     if any(x in q for x in ["phone","iphone","laptop","bike"]):
         if savings <= 0:
             return f"❌ You have ₹{int(savings):,} savings. Avoid this purchase."
 
         if amt:
             if amt > savings * 3:
-                return f"⚠️ Cost ₹{amt:,} is too high vs savings ₹{int(savings):,}."
+                return f"⚠️ ₹{amt} is too high vs your savings ₹{int(savings):,}."
             elif amt < savings:
-                return f"✅ Affordable. Cost ₹{amt:,}, savings ₹{int(savings):,}."
+                return f"✅ Affordable. Cost ₹{amt}, savings ₹{int(savings):,}."
             else:
-                return f"⚠️ It will impact savings significantly."
+                return "⚠️ It will reduce your savings significantly."
 
-        return f"📱 Your savings ₹{int(savings):,}. Evaluate before buying."
+        return f"📱 Your savings ₹{int(savings):,}. Evaluate carefully."
 
-    # BIG PURCHASE
+    # BIG
     if any(x in q for x in ["house","home","car"]):
         return (
             f"🏡 Big decision.\n\n"
             f"Income: ₹{int(income_val):,}/month\n"
             f"Savings: ₹{int(savings):,}/month\n\n"
-            f"Ensure EMI < 30–40% income and emergency fund."
+            f"Ensure EMI < 40% income + emergency fund."
         )
 
-    # INVEST
+    # OTHER
     if "invest" in q:
-        return f"📈 Risk profile: {policy['risk_profile']}. Invest accordingly."
+        return f"📈 Follow {policy['risk_profile']} investment strategy."
 
-    # SAVE
     if "save" in q:
-        return f"💰 Savings rate: {int(savings_rate)}%. Aim for 20–30%."
+        return f"💰 Your savings rate is {int(savings_rate)}%. Aim for 20–30%."
 
-    # TAX
     if "tax" in q:
-        return f"🏛️ {policy['better_regime']} regime saves more tax."
+        return f"🏛️ {policy['better_regime']} regime is better."
 
     return "🤖 Ask about buying, investing, savings, or tax."
 
+# CHAT EXECUTION
 if user_input:
     st.session_state.messages.append({"role":"user","content":user_input})
 
@@ -286,4 +193,4 @@ if user_input:
 # FOOTER
 # -------------------------
 st.markdown("---")
-st.caption("🚀 Built by Bhargiv | AI Finance Optimizer")
+st.caption("🚀 Built by Bhargiv")
